@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+errorReportR.txt
+errorReport.txt
+inst/sql/sql_server/empty.txt
