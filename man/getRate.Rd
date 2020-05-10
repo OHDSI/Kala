@@ -47,9 +47,12 @@ the denominator.}
 \item{cohortId}{The cohort definition ID used to reference the cohort in the cohort
 table.}
 
-\item{calendarPeriod}{A R-object that is an output of \code{Kala::convertDateVectorToDateSpan}.
-If not provided, a default calendarPeriod will be computed based on
-calendar years between cohort_start_date and cohort_end_date.}
+\item{calendarPeriod}{A R-object that has two date columns periodBegin, periodEnd where 
+periodEnd >= periodBegin (non-overlapping). Function 
+\code{Kala::convertDateVectorToDateSpan} maybe used to generate this 
+data frame If not provided, a default calendarPeriod 
+will be computed based on calendar years between cohort_start_date 
+and cohort_end_date.}
 
 \item{rateType}{Do you want 'incidence' or 'prevalence' for a calendarPeriod? 
 Default = 'incidence'.}

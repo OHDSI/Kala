@@ -31,9 +31,12 @@
 #' @param washoutPeriod         The minimum amount of observation time required before the occurrence
 #'                              of a cohort entry. This is also used to eliminate immortal time from
 #'                              the denominator.
-#' @param calendarPeriod        A R-object that is an output of \code{Kala::convertDateVectorToDateSpan}.
-#'                              If not provided, a default calendarPeriod will be computed based on
-#'                              calendar years between cohort_start_date and cohort_end_date.
+#' @param calendarPeriod        A R-object that has two date columns periodBegin, periodEnd where 
+#'                              periodEnd >= periodBegin (non-overlapping). Function 
+#'                              \code{Kala::convertDateVectorToDateSpan} maybe used to generate this 
+#'                              data frame If not provided, a default calendarPeriod 
+#'                              will be computed based on calendar years between cohort_start_date 
+#'                              and cohort_end_date.
 #' @param rateType              Do you want 'incidence' or 'prevalence' for a calendarPeriod? 
 #'                              Default = 'incidence'.
 #' @param cohortId              The cohort definition ID used to reference the cohort in the cohort
@@ -67,7 +70,7 @@ getRate <- function(connectionDetails = NULL,
   checkmate::assertChoice(rateType, choices = c('incidence', 'prevalence'), add = errorMessage)
   if (!is.null(calendarPeriod)) {
     checkmate::assertDataFrame(calendarPeriod, min.rows = 1, min.cols = 1, add = errorMessage)
-    
+    checkmate::assertNames(names(calendarPeriod), must.include = c('periodBegin', 'periodEnd'), add = errorMessage)
   }
   checkmate::reportAssertions(errorMessage)
   
@@ -78,10 +81,10 @@ getRate <- function(connectionDetails = NULL,
     on.exit(DatabaseConnector::disconnect(connection))
   }
   
-  cohortSummary <- getCohortSummary(connection = connection,
-                                    cohortDatabaseSchema = cohortDatabaseSchema,
-                                    cohortTable = cohortTable,
-                                    cohortId = cohortId)
+  cohortSummary <- Kala::getCohortSummary(connection = connection,
+                                          cohortDatabaseSchema = cohortDatabaseSchema,
+                                          cohortTable = cohortTable,
+                                          cohortId = cohortId)
   if (cohortSummary$record == 0) {
     warning("Cohort with ID ", cohortId, " appears to be empty. Was it instantiated?")
     delta <- Sys.time() - start
@@ -92,27 +95,31 @@ getRate <- function(connectionDetails = NULL,
   }
   
   if (is.null(calendarPeriod)) {
-    dateSpanForTimeSeries <- Kala::convertDateSpanToDateVector(x = cohortSummary,
-                                                               startDate = 'cohortStartDateMin',
-                                                               endDate = 'cohortEndDateMax') %>% 
+    calendarPeriod <- Kala::convertDateSpanToDateVector(x = cohortSummary,
+                                                        startDate = 'cohortStartDateMin',
+                                                        endDate = 'cohortEndDateMax') %>% 
       Kala::convertDateVectorToDateSpan(unit = "year") %>% 
       dplyr::rename(periodBegin = startDate, periodEnd = endDate)
   }
   
-  dateSpanForTimeSeries <- dateSpanForTimeSeries %>% 
-    Kala::collapseDateSpan(startDate = 'periodBegin', endDate = 'periodEnd', gap = 0)
+  calendarPeriod <- calendarPeriod %>% 
+    Kala::collapseDateSpan(startDate = 'periodBegin', endDate = 'periodEnd', gap = 0) %>% 
+    dplyr::rename(periodBegin = startDate, periodEnd = endDate)
   
+  ParallelLogger::logInfo(paste0("Creating reference calendar_period table"))
   DatabaseConnector::insertTable(connection = connection,
                                  tableName = "calendar_periods",
-                                 data = dateSpanForTimeSeries,
+                                 data = calendarPeriod,
                                  dropTableIfExists = TRUE,
                                  createTable = TRUE,
                                  tempTable = TRUE,
                                  oracleTempSchema = oracleTempSchema,
-                                 camelCaseToSnakeCase = TRUE)
-
+                                 progressBar = TRUE,
+                                 camelCaseToSnakeCase = TRUE,
+                                 useMppBulkLoad = FALSE)
+  
   ParallelLogger::logInfo(paste0("Calculating rate stratified by age and gender and calendar"))
-
+  
   sql <- SqlRender::loadRenderTranslateSql(sqlFilename = "ComputeTimeSeries.sql",
                                            packageName = "Kala",
                                            dbms = connection@dbms,
@@ -121,7 +128,8 @@ getRate <- function(connectionDetails = NULL,
                                            cohort_table = cohortTable,
                                            first_occurrence_only = firstOccurrenceOnly,
                                            washout_period = washoutPeriod,
-                                           cohort_id = cohortId)
+                                           cohort_id = cohortId,
+                                           rateType = rateType)
   DatabaseConnector::executeSql(connection, sql)
   
   sql <- "SELECT * FROM #rates_summary;"
@@ -138,67 +146,59 @@ getRate <- function(connectionDetails = NULL,
                                                reportOverallTime = FALSE,
                                                oracleTempSchema = oracleTempSchema)
   
-  rateAgeGender <- ratesSummary %>% 
-                      dplyr::mutate(ageGroup = paste(10 * ageGroup, 
-                                                     10 * ageGroup + 9, 
-                                                     sep = "-"
-                                                    ),
-                                    gender = stringr::str_to_sentence(gender)
-                      )
-                                    
-  rateOverall <- ratesSummary %>% 
-                dplyr::mutate(cohortCount = dplyr::summarise(cohortCount = sum(cohortCount),
-                                                             personYears = sum(personYears)
-                                                             )
-                              ) %>% 
-                dplyr::select(cohortCount, personYears)
+  ratesSummary <- ratesSummary %>% 
+    dplyr::mutate(ageGroup = paste(formatC(ageGroup*10, width=2, flag="0"),
+                                   formatC((ageGroup*10)+9, width=2, flag="0"),
+                                   sep = "-"
+    ),
+    gender = stringr::str_to_sentence(gender)
+    )
   
-  # rateGender <- ratesSummary %>% 
-  #               dplyr::mutate()
+  ratePeriod <- ratesSummary %>% 
+    dplyr::group_by(periodBegin, periodEnd) %>% 
+    dplyr::summarise(cohortCount = sum(cohortCount),
+                     personYears = sum(personYears)
+    )
   
-  irGender <- aggregateRate(irPeriodAgeGender, list(gender = irPeriodAgeGender$gender))
-  irAge <- aggregateRate(irPeriodAgeGender, list(ageGroup = irPeriodAgeGender$ageGroup))
-  irAgeGender <- aggregateRate(irPeriodAgeGender, list(ageGroup = irPeriodAgeGender$ageGroup,
-                                                     gender = irPeriodAgeGender$gender))
-  irPeriod <- aggregateRate(irPeriodAgeGender, list(periodType = irPeriodAgeGender$periodType, 
-                                                  periodBegin = irPeriodAgeGender$periodBegin))
-  irPeriodAge <- aggregateRate(irPeriodAgeGender, list(periodType = irPeriodAgeGender$periodType, 
-                                                     periodBegin = irPeriodAgeGender$periodBegin,
-                                                     ageGroup = irPeriodAgeGender$ageGroup))
-  irPeriodGender <- aggregateRate(irPeriodAgeGender, list(periodType = irPeriodAgeGender$periodType, 
-                                                        periodBegin = irPeriodAgeGender$periodBegin,
-                                                        gender = irPeriodAgeGender$gender))
-  result <- dplyr::bind_rows(rateOverall,
-                             irGender,
-                             irAge,
-                             rateAgeGender,
-                             irPeriod,
-                             irPeriodAge,
-                             irPeriodGender,
-                             irPeriodAgeGender) %>% 
-    dplyr::tibble()
-  result$incidenceRate <- 1000 * result$cohortCount/result$personYears
-  result$firstOccurrenceOnly <- firstOccurrenceOnly
-  result$washoutPeriod <- washoutPeriod
-  result$calendarSequence <- calendarSequence
+  ratePeriodAge <- ratesSummary %>% 
+    dplyr::group_by(periodBegin, periodEnd, ageGroup) %>% 
+    dplyr::summarise(cohortCount = sum(cohortCount),
+                     personYears = sum(personYears)
+    )
+  
+  ratePeriodGender <- ratesSummary %>% 
+    dplyr::group_by(periodBegin, periodEnd, gender) %>% 
+    dplyr::summarise(cohortCount = sum(cohortCount),
+                     personYears = sum(personYears)
+    )
+  
+  ratePeriodAgeGender <- ratesSummary %>% 
+    dplyr::group_by(periodBegin, periodEnd, ageGroup, gender) %>% 
+    dplyr::summarise(cohortCount = sum(cohortCount),
+                     personYears = sum(personYears)
+    )
+  
+  result <- dplyr::bind_rows(ratePeriod,
+                             ratePeriodAge,
+                             ratePeriodGender,
+                             ratePeriodAgeGender) %>% 
+    dplyr::tibble() %>% 
+    dplyr::mutate(ratePer1000 = 1000 * (cohortCount*1.0)/(personYears*1.0))
   
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste("Computing incidence rates took",
                                 signif(delta, 3),
                                 attr(delta, "units")))
+  
+  result <- result %>% 
+    dplyr::mutate(firstOccurrenceOnly = TRUE,
+                  washoutPeriod = 365,
+                  rateType = rateType) %>% 
+    tsibble::as_tsibble(result, 
+                        key = c(gender, ageGroup, 
+                                firstOccurrenceOnly, washoutPeriod, 
+                                rateType),
+                        validate = TRUE,
+                        index = 'periodBegin')
   return(result)
-}
-
-recode <- function(ratesSummary) {
-  ratesSummary$ageGroup <- paste(10 * ratesSummary$ageGroup, 10 * ratesSummary$ageGroup + 9, sep = "-")
-  ratesSummary$gender <- tolower(ratesSummary$gender)
-  substr(ratesSummary$gender, 1, 1) <- toupper(substr(ratesSummary$gender, 1, 1) ) 
-  return(ratesSummary)
-}
-
-aggregateRate <- function(ratesSummary, aggregateList) {
-  return(aggregate(cbind(cohortCount = ratesSummary$cohortCount,
-                         personYears = ratesSummary$personYears), 
-                   by = aggregateList, 
-                   FUN = sum))
 }

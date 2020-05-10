@@ -130,7 +130,7 @@ SELECT denominator.period_begin,
 			THEN numerator.cohort_count
 		ELSE CAST(0 AS INT)
 		END AS cohort_count,
-	person_years0
+	person_years
 INTO #rates_summary
 FROM #denominator denominator
 INNER JOIN @cdm_database_schema.concept ON denominator.gender_concept_id = concept_id

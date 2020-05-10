@@ -6,7 +6,7 @@
 \usage{
 getCohortSummary(
   connectionDetails = NULL,
-  connection,
+  connection = NULL,
   cohortDatabaseSchema,
   oracleTempSchema = NULL,
   cohortTable = "cohort",
