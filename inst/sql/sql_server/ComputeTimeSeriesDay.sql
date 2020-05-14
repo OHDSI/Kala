@@ -138,7 +138,8 @@ FROM #denominator denominator
 INNER JOIN @cdm_database_schema.concept ON denominator.gender_concept_id = concept_id
 LEFT JOIN #numerator numerator ON denominator.calendar_date = numerator.calendar_date
 	AND denominator.age_group = numerator.age_group
-	AND denominator.gender_concept_id = numerator.gender_concept_id;
+	AND denominator.gender_concept_id = numerator.gender_concept_id
+where denominator_count > 0;
 
 TRUNCATE TABLE #calendar_dates;
 

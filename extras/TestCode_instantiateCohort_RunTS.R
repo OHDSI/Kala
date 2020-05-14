@@ -6,7 +6,7 @@
 
 # instantiate a cohort in scratch, get ts data and store it as an Andromeda object
 library(magrittr)
-filePathSourceFiles <- "Z:/"
+filePathSourceFiles <- "d:/ignore"
 source(paste0(filePathSourceFiles, '/ignoreThisFile.R'))
 connectionDetails = NULL
 connection = NULL

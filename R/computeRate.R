@@ -32,8 +32,6 @@
 #' @param washoutPeriod         The minimum amount of observation time required before the occurrence
 #'                              of a cohort entry. This is also used to eliminate immortal time from
 #'                              the denominator.
-#' @param calendarDates          A vector of dates to measure.Default all dates between 
-#'                              min(cohort_start_date) and max(cohort_end_date)
 #' @param rateType              Do you want 'incidence' or 'prevalence' for a calendarPeriod? 
 #'                              Default = 'incidence'.
 #' @param cohortId              The cohort definition ID used to reference the cohort in the cohort
@@ -45,7 +43,7 @@
 #'                              index = periodBegin. The keys are parameters used in function call.
 #'                    
 #' @export
-getCountsPerDay <- function(connectionDetails = NULL,
+getTimeSeriesMeasures <- function(connectionDetails = NULL,
                             connection = NULL,
                             cohortDatabaseSchema,
                             cdmDatabaseSchema,
@@ -54,9 +52,10 @@ getCountsPerDay <- function(connectionDetails = NULL,
                             firstOccurrenceOnly = TRUE,
                             washoutPeriod = 365,
                             cohortId,
-                            calendarDates = NULL,
                             rateType = 'incidence',
                             asTsibble = TRUE) {
+  
+  startClockTime <- Sys.time()
   
   errorMessage <- checkmate::makeAssertCollection()
   checkmate::assertInt(cohortId, add = errorMessage)
@@ -74,8 +73,6 @@ getCountsPerDay <- function(connectionDetails = NULL,
   }
   checkmate::reportAssertions(errorMessage)
   
-  start <- Sys.time()
-  
   if (is.null(connection)) {
     connection <- DatabaseConnector::connect(connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection))
@@ -87,35 +84,31 @@ getCountsPerDay <- function(connectionDetails = NULL,
                                           cohortId = cohortId)
   if (cohortSummary$record == 0) {
     warning("Cohort with ID ", cohortId, " appears to be empty. Was it instantiated?")
-    delta <- Sys.time() - start
+    delta <- Sys.time() - startClockTime
     ParallelLogger::logInfo(paste("Computing rates took",
                                   signif(delta, 3),
                                   attr(delta, "units")))
     return(data.frame())
   }
   
-  if (is.null(calendarDates)) {
-    calendarDates <- tidyr::tibble(calendarDate = Kala::convertDateSpanToDateVector(x = tidyr::tibble(startDate = cohortSummary$cohortStartDateMin, 
-                                                                                                      endDate = cohortSummary$cohortEndDateMax),
-                                                                                    startDate = 'startDate', 
-                                                                                    endDate = 'endDate'
-    ))
-  } else {
-    calendarDates <- tidyr::tibble(calendarDate = calendarDates)
-  }
-  
   ParallelLogger::logInfo(paste0("Creating reference calendar_period table"))
-  DatabaseConnector::insertTable(connection = connection,
-                                 tableName = "#calendar_dates",
-                                 data = calendarDates,
-                                 dropTableIfExists = TRUE,
-                                 createTable = TRUE,
-                                 tempTable = TRUE,
-                                 oracleTempSchema = oracleTempSchema,
-                                 camelCaseToSnakeCase = TRUE)
+  startInsertTable <- Sys.time()
+  sql <- SqlRender::loadRenderTranslateSql(sqlFilename = "CalendarDates.sql",
+                                           packageName = "Kala",
+                                           dbms = connection@dbms,
+                                           oracleTempSchema = oracleTempSchema,
+                                           startDate = cohortSummary$cohortStartDateMin,
+                                           endDate = cohortSummary$cohortEndDateMax)
+  DatabaseConnector::executeSql(connection = connection,
+                                               sql = sql)
+  delta <- Sys.time() - startInsertTable
+  ParallelLogger::logInfo(paste("   took ",
+                                signif(delta, 3),
+                                attr(delta, "units"))
+                          )
   
-  ParallelLogger::logInfo(paste0("Calculating rate stratified by age and gender and calendar"))
-  
+  ParallelLogger::logInfo(paste0("Calculating Timeseries measures stratified by age and gender and calendar"))
+  startCalculation <- Sys.time()
   sql <- SqlRender::loadRenderTranslateSql(sqlFilename = "ComputeTimeSeriesDay.sql",
                                            packageName = "Kala",
                                            dbms = connection@dbms,
@@ -128,6 +121,11 @@ getCountsPerDay <- function(connectionDetails = NULL,
                                            cohort_id = cohortId,
                                            rateType = rateType)
   DatabaseConnector::executeSql(connection, sql)
+  delta <- Sys.time() - startCalculation
+  ParallelLogger::logInfo(paste("   calculation took ",
+                                signif(delta, 3),
+                                attr(delta, "units"))
+  )
   
   sql <- "SELECT * FROM #rates_summary;"
   ratesSummary <- DatabaseConnector::renderTranslateQuerySql(connection = connection,
@@ -151,11 +149,6 @@ getCountsPerDay <- function(connectionDetails = NULL,
     gender = stringr::str_to_sentence(gender)
     )
   
-  delta <- Sys.time() - start
-  ParallelLogger::logInfo(paste("Computing incidence rates took",
-                                signif(delta, 3),
-                                attr(delta, "units")))
-  
   result <- ratesSummary %>% 
     dplyr::mutate(firstOccurrenceOnly = TRUE,
                   washoutPeriod = 365,
@@ -170,5 +163,9 @@ getCountsPerDay <- function(connectionDetails = NULL,
                                   index = calendarDate) %>%
               tsibble::fill_gaps(numeratorCount = 0)
   }
+  delta <- Sys.time() - startClockTime
+  ParallelLogger::logInfo(paste("Computing timeseries took ",
+                                signif(delta, 3),
+                                attr(delta, "units")))
   return(result)
 }
