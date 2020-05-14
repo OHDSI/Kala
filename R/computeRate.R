@@ -17,46 +17,46 @@
 
 
 #' @title
-#' Compute rate for a cohort
+#' Returns measurement per day for cohort
 #'
 #' @description
-#' Returns rate stratified by age and gender
+#' Returns measurement per day for cohort stratified by age and gender
 #'
 #' @template connectionDetails
 #' @template connection
 #' @template cohortDatabaseSchema
+#' @template cdmDatabaseSchema
 #' @template cohortTable
 #' @template oracleTempSchema
 #' @param firstOccurrenceOnly   Use only the first occurrence of the cohort per person?
 #' @param washoutPeriod         The minimum amount of observation time required before the occurrence
 #'                              of a cohort entry. This is also used to eliminate immortal time from
 #'                              the denominator.
-#' @param calendarPeriod        A R-object that has two date columns periodBegin, periodEnd where 
-#'                              periodEnd >= periodBegin (non-overlapping). Function 
-#'                              \code{Kala::convertDateVectorToDateSpan} maybe used to generate this 
-#'                              data frame If not provided, a default calendarPeriod 
-#'                              will be computed based on calendar years between cohort_start_date 
-#'                              and cohort_end_date.
+#' @param calendarDates          A vector of dates to measure.Default all dates between 
+#'                              min(cohort_start_date) and max(cohort_end_date)
 #' @param rateType              Do you want 'incidence' or 'prevalence' for a calendarPeriod? 
 #'                              Default = 'incidence'.
 #' @param cohortId              The cohort definition ID used to reference the cohort in the cohort
 #'                              table.
+#' @param asTsibble             Should the returned data frame be in tsibble format?
 #'
-#' @return                      Returns a data frame of cohort count, person year count, period begin, 
-#'                              period end with the following stratifications: 1) no stratification, 
-#'                              2) gender stratification, 3) age (10-year) stratification,
-#'
+#' @return                      Returns a tsibble (data frame) with keys (gender, ageGroup, 
+#'                              firstOccurrenceOnly, washoutPeriod, rateType), 
+#'                              index = periodBegin. The keys are parameters used in function call.
+#'                    
 #' @export
-getRate <- function(connectionDetails = NULL,
-                    connection = NULL,
-                    cohortDatabaseSchema,
-                    cohortTable = 'cohort',
-                    oracleTempSchema = NULL,
-                    firstOccurrenceOnly = TRUE,
-                    washoutPeriod = 365,
-                    cohortId,
-                    calendarPeriod = NULL,
-                    rateType = 'incidence') {
+getCountsPerDay <- function(connectionDetails = NULL,
+                            connection = NULL,
+                            cohortDatabaseSchema,
+                            cdmDatabaseSchema,
+                            cohortTable = 'cohort',
+                            oracleTempSchema = NULL,
+                            firstOccurrenceOnly = TRUE,
+                            washoutPeriod = 365,
+                            cohortId,
+                            calendarDates = NULL,
+                            rateType = 'incidence',
+                            asTsibble = TRUE) {
   
   errorMessage <- checkmate::makeAssertCollection()
   checkmate::assertInt(cohortId, add = errorMessage)
@@ -67,10 +67,10 @@ getRate <- function(connectionDetails = NULL,
   checkmate::assertLogical(firstOccurrenceOnly, add = errorMessage)
   checkmate::assertInt(washoutPeriod, add = errorMessage)
   checkmate::assertScalar(rateType, add = errorMessage)
+  checkmate::assertLogical(asTsibble, add = errorMessage)
   checkmate::assertChoice(rateType, choices = c('incidence', 'prevalence'), add = errorMessage)
-  if (!is.null(calendarPeriod)) {
-    checkmate::assertDataFrame(calendarPeriod, min.rows = 1, min.cols = 1, add = errorMessage)
-    checkmate::assertNames(names(calendarPeriod), must.include = c('periodBegin', 'periodEnd'), add = errorMessage)
+  if (!is.null(calendarDates)) {
+    checkmate::assertVector(calendarDates, unique = TRUE, min.len = 1, add = errorMessage)
   }
   checkmate::reportAssertions(errorMessage)
   
@@ -94,37 +94,34 @@ getRate <- function(connectionDetails = NULL,
     return(data.frame())
   }
   
-  if (is.null(calendarPeriod)) {
-    calendarPeriod <- Kala::convertDateSpanToDateVector(x = cohortSummary,
-                                                        startDate = 'cohortStartDateMin',
-                                                        endDate = 'cohortEndDateMax') %>% 
-      Kala::convertDateVectorToDateSpan(unit = "year") %>% 
-      dplyr::rename(periodBegin = startDate, periodEnd = endDate)
+  if (is.null(calendarDates)) {
+    calendarDates <- tidyr::tibble(calendarDate = Kala::convertDateSpanToDateVector(x = tidyr::tibble(startDate = cohortSummary$cohortStartDateMin, 
+                                                                                                      endDate = cohortSummary$cohortEndDateMax),
+                                                                                    startDate = 'startDate', 
+                                                                                    endDate = 'endDate'
+    ))
+  } else {
+    calendarDates <- tidyr::tibble(calendarDate = calendarDates)
   }
-  
-  calendarPeriod <- calendarPeriod %>% 
-    Kala::collapseDateSpan(startDate = 'periodBegin', endDate = 'periodEnd', gap = 0) %>% 
-    dplyr::rename(periodBegin = startDate, periodEnd = endDate)
   
   ParallelLogger::logInfo(paste0("Creating reference calendar_period table"))
   DatabaseConnector::insertTable(connection = connection,
-                                 tableName = "calendar_periods",
-                                 data = calendarPeriod,
+                                 tableName = "#calendar_dates",
+                                 data = calendarDates,
                                  dropTableIfExists = TRUE,
                                  createTable = TRUE,
                                  tempTable = TRUE,
                                  oracleTempSchema = oracleTempSchema,
-                                 progressBar = TRUE,
-                                 camelCaseToSnakeCase = TRUE,
-                                 useMppBulkLoad = FALSE)
+                                 camelCaseToSnakeCase = TRUE)
   
   ParallelLogger::logInfo(paste0("Calculating rate stratified by age and gender and calendar"))
   
-  sql <- SqlRender::loadRenderTranslateSql(sqlFilename = "ComputeTimeSeries.sql",
+  sql <- SqlRender::loadRenderTranslateSql(sqlFilename = "ComputeTimeSeriesDay.sql",
                                            packageName = "Kala",
                                            dbms = connection@dbms,
                                            oracleTempSchema = oracleTempSchema,
                                            cohort_database_schema = cohortDatabaseSchema,
+                                           cdm_database_schema = cdmDatabaseSchema,
                                            cohort_table = cohortTable,
                                            first_occurrence_only = firstOccurrenceOnly,
                                            washout_period = washoutPeriod,
@@ -154,51 +151,24 @@ getRate <- function(connectionDetails = NULL,
     gender = stringr::str_to_sentence(gender)
     )
   
-  ratePeriod <- ratesSummary %>% 
-    dplyr::group_by(periodBegin, periodEnd) %>% 
-    dplyr::summarise(cohortCount = sum(cohortCount),
-                     personYears = sum(personYears)
-    )
-  
-  ratePeriodAge <- ratesSummary %>% 
-    dplyr::group_by(periodBegin, periodEnd, ageGroup) %>% 
-    dplyr::summarise(cohortCount = sum(cohortCount),
-                     personYears = sum(personYears)
-    )
-  
-  ratePeriodGender <- ratesSummary %>% 
-    dplyr::group_by(periodBegin, periodEnd, gender) %>% 
-    dplyr::summarise(cohortCount = sum(cohortCount),
-                     personYears = sum(personYears)
-    )
-  
-  ratePeriodAgeGender <- ratesSummary %>% 
-    dplyr::group_by(periodBegin, periodEnd, ageGroup, gender) %>% 
-    dplyr::summarise(cohortCount = sum(cohortCount),
-                     personYears = sum(personYears)
-    )
-  
-  result <- dplyr::bind_rows(ratePeriod,
-                             ratePeriodAge,
-                             ratePeriodGender,
-                             ratePeriodAgeGender) %>% 
-    dplyr::tibble() %>% 
-    dplyr::mutate(ratePer1000 = 1000 * (cohortCount*1.0)/(personYears*1.0))
-  
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste("Computing incidence rates took",
                                 signif(delta, 3),
                                 attr(delta, "units")))
   
-  result <- result %>% 
+  result <- ratesSummary %>% 
     dplyr::mutate(firstOccurrenceOnly = TRUE,
                   washoutPeriod = 365,
-                  rateType = rateType) %>% 
-    tsibble::as_tsibble(result, 
-                        key = c(gender, ageGroup, 
-                                firstOccurrenceOnly, washoutPeriod, 
-                                rateType),
-                        validate = TRUE,
-                        index = 'periodBegin')
+                  rateType = rateType)
+  
+  if (isTRUE(asTsibble)) { 
+    result <- result %>% 
+            tsibble::as_tsibble(key = c(gender, ageGroup, 
+                                         firstOccurrenceOnly, washoutPeriod, 
+                                         rateType),
+                                  validate = TRUE,
+                                  index = calendarDate) %>%
+              tsibble::fill_gaps(numeratorCount = 0)
+  }
   return(result)
 }
