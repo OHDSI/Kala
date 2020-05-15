@@ -6,7 +6,6 @@
 
 # instantiate a cohort in scratch, get ts data and store it as an Andromeda object
 library(magrittr)
-filePathSourceFiles <- "d:/ignore"
 source(paste0(filePathSourceFiles, '/ignoreThisFile.R'))
 connectionDetails = NULL
 connection = NULL
@@ -50,7 +49,7 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
     cohortId <- cohortIds[i]
     # get cohorts SQL from WebApi
     sql <- ROhdsiWebApi::getCohortDefinitionSql(baseUrl = Sys.getenv("baseUrl"), 
-                                                definitionId = cohortId, 
+                                                cohortId = cohortId, 
                                                 generateStats = FALSE
     )
     cohortName <- ROhdsiWebApi::getCohortDefinition(baseUrl = Sys.getenv("baseUrl"),cohortId = cohortId)$name
@@ -68,14 +67,13 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
     for (j in (1:length(rateTypes))) { #j = 1
       rateType <- rateTypes[j]
       
-      result <- Kala::getCountsPerDay(connectionDetails = connectionDetails, 
+      result <- Kala::getTimeSeriesMeasures(connectionDetails = connectionDetails, 
                                       cohortDatabaseSchema = connectionDetailMetaData$cohortDatabaseSchema, 
                                       cdmDatabaseSchema = connectionDetailMetaData$cdmDatabaseSchema,
                                       cohortTable = cohort, 
                                       oracleTempSchema = NULL, 
                                       firstOccurrenceOnly = firstOccurrenceOnly, 
                                       washoutPeriod = washoutPeriod, 
-                                      calendarDates =  NULL, 
                                       rateType = rateType, 
                                       cohortId = cohortId,
                                       asTsibble = FALSE) %>% 

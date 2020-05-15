@@ -68,9 +68,6 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
   checkmate::assertScalar(rateType, add = errorMessage)
   checkmate::assertLogical(asTsibble, add = errorMessage)
   checkmate::assertChoice(rateType, choices = c('incidence', 'prevalence'), add = errorMessage)
-  if (!is.null(calendarDates)) {
-    checkmate::assertVector(calendarDates, unique = TRUE, min.len = 1, add = errorMessage)
-  }
   checkmate::reportAssertions(errorMessage)
   
   if (is.null(connection)) {
