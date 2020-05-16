@@ -85,7 +85,11 @@ SELECT cal.calendar_date,
 	) AS atriskFirst,
 	COUNT(DISTINCT op.person_id)	in_observation
 INTO #denominator
-FROM @cdm_database_schema.observation_period op
+FROM (
+		select *
+		from @cdm_database_schema.observation_period
+		WHERE DATEADD(DAY, @washout_period, op.observation_period_start_date) < op.observation_period_end_date
+) op
 INNER JOIN @cdm_database_schema.person p ON op.person_id = p.person_id
 INNER JOIN (
 	SELECT 	MIN(cohort_start_date) cohort_start_date_min,
@@ -96,12 +100,9 @@ INNER JOIN (
 INNER JOIN #calendar_dates cal ON cal.calendar_date >= op.observation_period_start_date
 	AND cal.calendar_date <= op.observation_period_end_date
 LEFT JOIN @cohort_database_schema.@cohort_table cohort ON cohort.subject_id = op.person_id
-	AND cohort.cohort_start_date < cal.calendar_date
+	AND cohort.cohort_start_date <= cal.calendar_date
 LEFT JOIN #cohort_first cohort_first ON cohort.subject_id = op.person_id
-	AND cohort_first.cohort_start_date < cal.calendar_date
-WHERE DATEADD(DAY, @washout_period, op.observation_period_start_date) < op.observation_period_end_date
-	AND DATEADD(DAY, @washout_period, op.observation_period_start_date) <= cohort_end_date_max
-	AND op.observation_period_end_date >= c.cohort_start_date_min
+	AND cohort_first.cohort_start_date <= cal.calendar_date
 GROUP BY cal.calendar_date,
 	FLOOR((YEAR(cal.calendar_date) - p.year_of_birth) / 10),
 	p.gender_concept_id;
