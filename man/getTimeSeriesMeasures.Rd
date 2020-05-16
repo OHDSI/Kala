@@ -11,10 +11,8 @@ getTimeSeriesMeasures(
   cdmDatabaseSchema,
   cohortTable = "cohort",
   oracleTempSchema = NULL,
-  firstOccurrenceOnly = TRUE,
   washoutPeriod = 365,
   cohortId,
-  rateType = "incidence",
   asTsibble = TRUE
 )
 }
@@ -43,8 +41,6 @@ schema name, for example 'cdm_data.dbo'.}
 \item{oracleTempSchema}{Should be used in Oracle to specify a schema where the user has write
 privileges for storing temporary tables.}
 
-\item{firstOccurrenceOnly}{Use only the first occurrence of the cohort per person?}
-
 \item{washoutPeriod}{The minimum amount of observation time required before the occurrence
 of a cohort entry. This is also used to eliminate immortal time from
 the denominator.}
@@ -52,14 +48,11 @@ the denominator.}
 \item{cohortId}{The cohort definition ID used to reference the cohort in the cohort
 table.}
 
-\item{rateType}{Do you want 'incidence' or 'prevalence' for a calendarPeriod? 
-Default = 'incidence'.}
-
 \item{asTsibble}{Should the returned data frame be in tsibble format?}
 }
 \value{
 Returns a tsibble (data frame) with keys (gender, ageGroup, 
-                             firstOccurrenceOnly, washoutPeriod, rateType), 
+                             washoutPeriod), 
                              index = periodBegin. The keys are parameters used in function call.
 }
 \description{

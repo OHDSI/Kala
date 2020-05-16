@@ -3,7 +3,7 @@
 ######################################################################################
 ######################################################################################
 ######################################################################################
-
+filePathSourceFiles <- "z:"
 # instantiate a cohort in scratch, get ts data and store it as an Andromeda object
 library(magrittr)
 source(paste0(filePathSourceFiles, '/ignoreThisFile.R'))
@@ -22,8 +22,7 @@ connectionDetailsMetaData <- redShiftConnectionDetailsMetaData %>%
 
 cohort <- 'cohort'
 washoutPeriod <- 365
-firstOccurrenceOnly <- FALSE
-rateTypes <- c('incidence')#,'prevalence'
+# rateTypes <- c('incidence')#,'prevalence'
 cohortIds <- c(11658,15996,
                16014,
                16011,
@@ -32,6 +31,7 @@ cohortIds <- c(11658,15996,
                16010)
 
 z <- 0
+k <- 1
 for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
   
   connectionDetailMetaData <- connectionDetailsMetaData %>% dplyr::slice(k)
@@ -45,6 +45,7 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
   print(z)
   print(paste0("working on source name = ", connectionDetailMetaData$sourceName))
   
+i <- 1
   for (i in (1:length(cohortIds))) { # i = 1
     cohortId <- cohortIds[i]
     # get cohorts SQL from WebApi
@@ -64,19 +65,17 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
                                                  target_cohort_id = cohortId)
     print("....generated cohort")
     # get results for both rateType
-    for (j in (1:length(rateTypes))) { #j = 1
-      rateType <- rateTypes[j]
       
       result <- Kala::getTimeSeriesMeasures(connectionDetails = connectionDetails, 
                                       cohortDatabaseSchema = connectionDetailMetaData$cohortDatabaseSchema, 
                                       cdmDatabaseSchema = connectionDetailMetaData$cdmDatabaseSchema,
                                       cohortTable = cohort, 
                                       oracleTempSchema = NULL, 
-                                      firstOccurrenceOnly = firstOccurrenceOnly, 
                                       washoutPeriod = washoutPeriod, 
-                                      rateType = rateType, 
                                       cohortId = cohortId,
-                                      asTsibble = FALSE) %>% 
+                                      asTsibble = FALSE) 
+      result <- result %>% 
+      
         dplyr::mutate(cohortId == cohortId,
                       cohortName == cohortName,
                       sourceKey == connectionDetailMetaData$sourceKey,
@@ -88,6 +87,5 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
       } else {
         storeAndromeda <- Andromeda::appendToTable(timeSeries, result)
       }
-    }
   }
 }

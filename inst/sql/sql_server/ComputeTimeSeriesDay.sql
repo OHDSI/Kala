@@ -1,47 +1,57 @@
-IF OBJECT_ID('tempdb..#cohort', 'U') IS NOT NULL
-	DROP TABLE #cohort;
+IF OBJECT_ID('tempdb..#cohort_first', 'U') IS NOT NULL
+	DROP TABLE #cohort_first;
 
 --HINT DISTRIBUTE_ON_KEY(subject_id)
-SELECT *
-INTO #cohort
-FROM 
-{@first_occurrence_only} ? {(
-	SELECT subject_id,
-		MIN(cohort_start_date) AS cohort_start_date,
-		MIN(cohort_end_date) AS cohort_end_date
-	FROM @cohort_database_schema.@cohort_table
-	WHERE cohort_definition_id = @cohort_id
-	GROUP BY subject_id
-	) c} : {(
-	SELECT *
-	FROM @cohort_database_schema.@cohort_table
-	WHERE cohort_definition_id = @cohort_id 
-	) c
-};
+SELECT subject_id,
+	MIN(cohort_start_date) AS cohort_start_date,
+	MIN(cohort_end_date) AS cohort_end_date
+INTO #cohort_first
+FROM @cohort_database_schema.@cohort_table
+WHERE cohort_definition_id = @cohort_id
+GROUP BY subject_id;
 
 
 IF OBJECT_ID('tempdb..#numerator', 'U') IS NOT NULL
 	DROP TABLE #numerator;
 	
 --HINT DISTRIBUTE_ON_KEY(calendar_date)
-SELECT calendar_date,
+SELECT cal.calendar_date,
 	FLOOR((YEAR(cohort.cohort_start_date) - p.year_of_birth) / 10) age_group,
-	gender_concept_id,
-	COUNT(DISTINCT subject_id) AS numerator_count
+	p.gender_concept_id,
+	-- incidence: calendar_date = cohort_start_date
+	COUNT(DISTINCT (CASE 
+						WHEN cohort.cohort_start_date = cal.calendar_date THEN cohort.subject_id
+						ELSE NULL
+					END)
+		) AS incidence,
+	-- prevalence: calendar_date between cohort_start_date and cohort_end_date (both dates inclusive)
+	COUNT(DISTINCT cohort.subject_id) AS prevalence,
+	-- incidence: calendar_date = cohort_start_date
+	COUNT(DISTINCT (CASE 
+						WHEN cohort_first.cohort_start_date = cal.calendar_date THEN cohort_first.subject_id
+						ELSE NULL
+					END)
+		) AS incidence_first,
+	-- prevalence: calendar_date between cohort_start_date and cohort_end_date (both dates inclusive)
+	COUNT(DISTINCT (CASE
+						WHEN cal.calendar_date >= cohort_first.cohort_start_date
+							AND cal.calendar_date <= cohort_first.cohort_end_date THEN cohort_first.subject_id
+						ELSE NULL
+					END)
+		) AS prevalence_first
 INTO #numerator
-FROM #cohort cohort
+FROM @cohort_database_schema.@cohort_table cohort
+INNER JOIN #cohort_first cohort_first
+ON cohort.subject_id = cohort_first.subject_id
 INNER JOIN @cdm_database_schema.person p ON cohort.subject_id = p.person_id
 INNER JOIN @cdm_database_schema.observation_period op ON op.person_id = cohort.subject_id
 	AND DATEADD(DAY, @washout_period, op.observation_period_start_date) <= cohort.cohort_start_date
 	AND op.observation_period_end_date >= cohort.cohort_start_date 
-{@rateType == 'incidence' } ? {
-INNER JOIN #calendar_dates cp ON cohort.cohort_start_date = cp.calendar_date } 
-{@rateType == 'prevalence' } ? {
-INNER JOIN #calendar_dates cp ON cohort.cohort_end_date >= cp.calendar_date
-	AND cohort.cohort_start_date <= cp.calendar_date }
-GROUP BY calendar_date,
+INNER JOIN #calendar_dates cal ON cal.calendar_date >= cohort.cohort_start_date
+	AND cal.calendar_date <= cohort.cohort_end_date
+GROUP BY cal.calendar_date,
 	FLOOR((YEAR(cohort.cohort_start_date) - p.year_of_birth) / 10),
-	gender_concept_id;
+	p.gender_concept_id;
 	
 	
 
@@ -49,30 +59,52 @@ IF OBJECT_ID('tempdb..#denominator', 'U') IS NOT NULL
 	DROP TABLE #denominator;
 
 --HINT DISTRIBUTE_ON_KEY(calendar_date)
-SELECT cp.calendar_date,
-	FLOOR((YEAR(cp.calendar_date) - p.year_of_birth) / 10) AS age_group,
+SELECT cal.calendar_date,
+	FLOOR((YEAR(cal.calendar_date) - p.year_of_birth) / 10) AS age_group,
 	p.gender_concept_id,
-	COUNT(DISTINCT p.person_id) AS denominator_count
+	-- atrisk: these are indviduals who on a particular date are 
+	-- either not in the cohort i.e. cohort_start_date IS NULL
+	-- or, calendar_date is on or before cohort_start_date
+	COUNT(DISTINCT (CASE
+						WHEN cohort.cohort_start_date IS NULL THEN op.person_id
+						WHEN cal.calendar_date <= cohort.cohort_start_date THEN op.person_id
+						ELSE NULL
+					END
+					)	
+	) AS atrisk,
+	-- atrisk: these are indviduals who on a particular date are 
+	-- either not in the cohort_first i.e. cohort_start_date IS NULL
+	-- or, calendar_date is on or before cohort_start_date of the first occurrence cohort
+	COUNT(DISTINCT (CASE
+						WHEN cohort_first.cohort_start_date IS NULL THEN op.person_id
+						WHEN cal.calendar_date >= cohort_first.cohort_start_date AND
+							 cal.calendar_date <= cohort_first.cohort_end_date THEN op.person_id
+						ELSE NULL
+					END
+					)	
+	) AS atriskFirst,
+	COUNT(DISTINCT op.person_id)	in_observation
 INTO #denominator
 FROM @cdm_database_schema.observation_period op
 INNER JOIN @cdm_database_schema.person p ON op.person_id = p.person_id
 INNER JOIN (
-	SELECT MIN(cohort_start_date) cohort_start_date_min,
-		MAX(cohort_end_date) cohort_end_date_max
-	FROM #cohort
-	) c ON DATEADD(DAY, @washout_period, observation_period_start_date) <= cohort_end_date_max
-	AND observation_period_end_date >= cohort_start_date_min
-INNER JOIN #calendar_dates cp ON observation_period_start_date <= cp.calendar_date
-	AND op.observation_period_end_date >= cp.calendar_date {@first_occurrence_only} ? {
-LEFT JOIN #cohort ON subject_id = person_id
-	AND cohort_start_date < calendar_date }
-WHERE DATEADD(DAY, @washout_period, observation_period_start_date) < observation_period_end_date
-	AND DATEADD(DAY, @washout_period, observation_period_start_date) <= cohort_end_date_max
-	AND observation_period_end_date >= cohort_start_date_min {@first_occurrence_only} ? {
-	AND cohort_start_date IS NULL }
-GROUP BY calendar_date,
-	FLOOR((YEAR(calendar_date) - year_of_birth) / 10),
-	gender_concept_id;
+	SELECT 	MIN(cohort_start_date) cohort_start_date_min,
+			MAX(cohort_end_date) cohort_end_date_max
+	FROM @cohort_database_schema.@cohort_table
+	) c ON DATEADD(DAY, @washout_period, op.observation_period_start_date) <= c.cohort_end_date_max
+	AND op.observation_period_end_date >= c.cohort_start_date_min
+INNER JOIN #calendar_dates cal ON cal.calendar_date >= op.observation_period_start_date
+	AND cal.calendar_date <= op.observation_period_end_date
+LEFT JOIN @cohort_database_schema.@cohort_table cohort ON cohort.subject_id = op.person_id
+	AND cohort.cohort_start_date < cal.calendar_date
+LEFT JOIN #cohort_first cohort_first ON cohort.subject_id = op.person_id
+	AND cohort_first.cohort_start_date < cal.calendar_date
+WHERE DATEADD(DAY, @washout_period, op.observation_period_start_date) < op.observation_period_end_date
+	AND DATEADD(DAY, @washout_period, op.observation_period_start_date) <= cohort_end_date_max
+	AND op.observation_period_end_date >= c.cohort_start_date_min
+GROUP BY cal.calendar_date,
+	FLOOR((YEAR(cal.calendar_date) - p.year_of_birth) / 10),
+	p.gender_concept_id;
 	
 
 IF OBJECT_ID('tempdb..#rates_summary', 'U') IS NOT NULL
@@ -81,27 +113,26 @@ IF OBJECT_ID('tempdb..#rates_summary', 'U') IS NOT NULL
 SELECT denominator.calendar_date,
 	denominator.age_group,
 	concept_name AS gender,
-	CASE 
-		WHEN numerator.numerator_count IS NOT NULL
-			THEN numerator.numerator_count
-		ELSE CAST(0 AS INT)
-		END AS numerator_count,
-	denominator_count
+	numerator.incidence,
+	numerator.prevalence,
+	numerator.incidence_first,
+	numerator.prevalence_first,
+	denominator.atrisk,
+	denominator.atriskFirst
 INTO #rates_summary
 FROM #denominator denominator
 INNER JOIN @cdm_database_schema.concept ON denominator.gender_concept_id = concept_id
 LEFT JOIN #numerator numerator ON denominator.calendar_date = numerator.calendar_date
 	AND denominator.age_group = numerator.age_group
-	AND denominator.gender_concept_id = numerator.gender_concept_id
-where denominator_count > 0;
+	AND denominator.gender_concept_id = numerator.gender_concept_id;
 
 TRUNCATE TABLE #calendar_dates;
 
 DROP TABLE #calendar_dates;
 
-TRUNCATE TABLE #cohort;
+TRUNCATE TABLE #cohort_first;
 
-DROP TABLE #cohort;
+DROP TABLE #cohort_first;
 
 TRUNCATE TABLE #numerator;
 

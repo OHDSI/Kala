@@ -28,18 +28,15 @@
 #' @template cdmDatabaseSchema
 #' @template cohortTable
 #' @template oracleTempSchema
-#' @param firstOccurrenceOnly   Use only the first occurrence of the cohort per person?
 #' @param washoutPeriod         The minimum amount of observation time required before the occurrence
 #'                              of a cohort entry. This is also used to eliminate immortal time from
 #'                              the denominator.
-#' @param rateType              Do you want 'incidence' or 'prevalence' for a calendarPeriod? 
-#'                              Default = 'incidence'.
 #' @param cohortId              The cohort definition ID used to reference the cohort in the cohort
 #'                              table.
 #' @param asTsibble             Should the returned data frame be in tsibble format?
 #'
 #' @return                      Returns a tsibble (data frame) with keys (gender, ageGroup, 
-#'                              firstOccurrenceOnly, washoutPeriod, rateType), 
+#'                              washoutPeriod), 
 #'                              index = periodBegin. The keys are parameters used in function call.
 #'                    
 #' @export
@@ -49,10 +46,8 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
                             cdmDatabaseSchema,
                             cohortTable = 'cohort',
                             oracleTempSchema = NULL,
-                            firstOccurrenceOnly = TRUE,
                             washoutPeriod = 365,
                             cohortId,
-                            rateType = 'incidence',
                             asTsibble = TRUE) {
   
   startClockTime <- Sys.time()
@@ -63,11 +58,8 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
   checkmate::assertCharacter(cohortTable, add = errorMessage)
   checkmate::assertScalar(cohortDatabaseSchema, add = errorMessage)
   checkmate::assertCharacter(cohortDatabaseSchema, add = errorMessage)
-  checkmate::assertLogical(firstOccurrenceOnly, add = errorMessage)
   checkmate::assertInt(washoutPeriod, add = errorMessage)
-  checkmate::assertScalar(rateType, add = errorMessage)
   checkmate::assertLogical(asTsibble, add = errorMessage)
-  checkmate::assertChoice(rateType, choices = c('incidence', 'prevalence'), add = errorMessage)
   checkmate::reportAssertions(errorMessage)
   
   if (is.null(connection)) {
@@ -113,10 +105,8 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
                                            cohort_database_schema = cohortDatabaseSchema,
                                            cdm_database_schema = cdmDatabaseSchema,
                                            cohort_table = cohortTable,
-                                           first_occurrence_only = firstOccurrenceOnly,
                                            washout_period = washoutPeriod,
-                                           cohort_id = cohortId,
-                                           rateType = rateType)
+                                           cohort_id = cohortId)
   DatabaseConnector::executeSql(connection, sql)
   delta <- Sys.time() - startCalculation
   ParallelLogger::logInfo(paste("   calculation took ",
@@ -147,15 +137,11 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
     )
   
   result <- ratesSummary %>% 
-    dplyr::mutate(firstOccurrenceOnly = TRUE,
-                  washoutPeriod = 365,
-                  rateType = rateType)
+    dplyr::mutate(washoutPeriod = 365)
   
   if (isTRUE(asTsibble)) { 
     result <- result %>% 
-            tsibble::as_tsibble(key = c(gender, ageGroup, 
-                                         firstOccurrenceOnly, washoutPeriod, 
-                                         rateType),
+            tsibble::as_tsibble(key = c(gender, ageGroup, washoutPeriod),
                                   validate = TRUE,
                                   index = calendarDate) %>%
               tsibble::fill_gaps(numeratorCount = 0)
