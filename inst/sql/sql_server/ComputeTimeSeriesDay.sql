@@ -42,13 +42,19 @@ SELECT cal.calendar_date,
 INTO #numerator
 FROM @cohort_database_schema.@cohort_table cohort
 INNER JOIN #cohort_first cohort_first
-ON cohort.subject_id = cohort_first.subject_id
-INNER JOIN @cdm_database_schema.person p ON cohort.subject_id = p.person_id
-INNER JOIN @cdm_database_schema.observation_period op ON op.person_id = cohort.subject_id
-	AND DATEADD(DAY, @washout_period, op.observation_period_start_date) <= cohort.cohort_start_date
-	AND op.observation_period_end_date >= cohort.cohort_start_date 
-INNER JOIN #calendar_dates cal ON cal.calendar_date >= cohort.cohort_start_date
-	AND cal.calendar_date <= cohort.cohort_end_date
+ON cohort.subject_id = cohort_first.subject_id -- n:1 join
+INNER JOIN @cdm_database_schema.person p ON cohort.subject_id = p.person_id -- n:1 join
+INNER JOIN (
+			select 	person_id, 
+					DATEADD(DAY, @washout_period, op.observation_period_start_date) observation_period_start_date,
+					observation_period_end_date
+			from @cdm_database_schema.observation_period
+			WHERE DATEADD(DAY, @washout_period, op.observation_period_start_date) < op.observation_period_end_date
+) op ON op.person_id = cohort.subject_id
+	AND op.observation_period_start_date <= cohort.cohort_start_date
+	AND op.observation_period_end_date >= cohort.cohort_start_date -- n:1 join -- because observation_periods should not overlap
+INNER JOIN #calendar_dates cal ON cal.calendar_date >= cohort.cohort_start_date ---m:n join -- should this sql be seperated out? many calendar dates can be between cohort_start_date and cohort_end_date
+	AND cal.calendar_date <= cohort.cohort_end_date -- many persons have cohort_start_date and cohort_end_dates
 GROUP BY cal.calendar_date,
 	FLOOR((YEAR(cohort.cohort_start_date) - p.year_of_birth) / 10),
 	p.gender_concept_id;
@@ -86,7 +92,9 @@ SELECT cal.calendar_date,
 	COUNT(DISTINCT op.person_id)	in_observation
 INTO #denominator
 FROM (
-		select *
+		select 	person_id, 
+				DATEADD(DAY, @washout_period, op.observation_period_start_date) observation_period_start_date,
+				observation_period_end_date
 		from @cdm_database_schema.observation_period
 		WHERE DATEADD(DAY, @washout_period, op.observation_period_start_date) < op.observation_period_end_date
 ) op
@@ -95,7 +103,7 @@ INNER JOIN (
 	SELECT 	MIN(cohort_start_date) cohort_start_date_min,
 			MAX(cohort_end_date) cohort_end_date_max
 	FROM @cohort_database_schema.@cohort_table
-	) c ON DATEADD(DAY, @washout_period, op.observation_period_start_date) <= c.cohort_end_date_max
+	) c ON op.observation_period_start_date <= c.cohort_end_date_max
 	AND op.observation_period_end_date >= c.cohort_start_date_min
 INNER JOIN #calendar_dates cal ON cal.calendar_date >= op.observation_period_start_date
 	AND cal.calendar_date <= op.observation_period_end_date
