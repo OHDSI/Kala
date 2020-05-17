@@ -66,6 +66,7 @@ i <- 1
     print("....generated cohort")
     # get results for both rateType
       
+    print(Sys.time())
       result <- Kala::getTimeSeriesMeasures(connectionDetails = connectionDetails, 
                                       cohortDatabaseSchema = connectionDetailMetaData$cohortDatabaseSchema, 
                                       cdmDatabaseSchema = connectionDetailMetaData$cdmDatabaseSchema,

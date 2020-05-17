@@ -46,14 +46,14 @@ ON cohort.subject_id = cohort_first.subject_id -- n:1 join
 INNER JOIN @cdm_database_schema.person p ON cohort.subject_id = p.person_id -- n:1 join
 INNER JOIN (
 			select 	person_id, 
-					DATEADD(DAY, @washout_period, op.observation_period_start_date) observation_period_start_date,
+					DATEADD(DAY, @washout_period, observation_period_start_date) observation_period_start_date,
 					observation_period_end_date
 			from @cdm_database_schema.observation_period
-			WHERE DATEADD(DAY, @washout_period, op.observation_period_start_date) < op.observation_period_end_date
+			WHERE DATEADD(DAY, @washout_period, observation_period_start_date) < observation_period_end_date
 ) op ON op.person_id = cohort.subject_id
 	AND op.observation_period_start_date <= cohort.cohort_start_date
 	AND op.observation_period_end_date >= cohort.cohort_start_date -- n:1 join -- because observation_periods should not overlap
-INNER JOIN #calendar_dates cal ON cal.calendar_date >= cohort.cohort_start_date ---m:n join -- should this sql be seperated out? many calendar dates can be between cohort_start_date and cohort_end_date
+INNER JOIN #calendar_dates cal ON cal.calendar_date >= cohort.cohort_start_date ---m:n join -- should this sql be seperated out? many calendar dates can be between cohort_start_date and cohort_end_date &
 	AND cal.calendar_date <= cohort.cohort_end_date -- many persons have cohort_start_date and cohort_end_dates
 GROUP BY cal.calendar_date,
 	FLOOR((YEAR(cohort.cohort_start_date) - p.year_of_birth) / 10),
@@ -89,28 +89,32 @@ SELECT cal.calendar_date,
 					END
 					)	
 	) AS atriskFirst,
-	COUNT(DISTINCT op.person_id)	in_observation
+	COUNT(DISTINCT op.person_id) in_observation
 INTO #denominator
 FROM (
 		select 	person_id, 
-				DATEADD(DAY, @washout_period, op.observation_period_start_date) observation_period_start_date,
+				DATEADD(DAY, @washout_period, observation_period_start_date) observation_period_start_date,
 				observation_period_end_date
-		from @cdm_database_schema.observation_period
-		WHERE DATEADD(DAY, @washout_period, op.observation_period_start_date) < op.observation_period_end_date
+		from @cdm_database_schema.observation_period op1
+		INNER JOIN (
+					SELECT 	MIN(cohort_start_date) cohort_start_date_min,
+							MAX(cohort_end_date) cohort_end_date_max
+					FROM @cohort_database_schema.@cohort_table
+		) c ON op1.observation_period_start_date <= c.cohort_end_date_max
+		AND op1.observation_period_end_date >= c.cohort_start_date_min
+		WHERE DATEADD(DAY, @washout_period, observation_period_start_date) < observation_period_end_date
 ) op
-INNER JOIN @cdm_database_schema.person p ON op.person_id = p.person_id
-INNER JOIN (
-	SELECT 	MIN(cohort_start_date) cohort_start_date_min,
-			MAX(cohort_end_date) cohort_end_date_max
-	FROM @cohort_database_schema.@cohort_table
-	) c ON op.observation_period_start_date <= c.cohort_end_date_max
-	AND op.observation_period_end_date >= c.cohort_start_date_min
-INNER JOIN #calendar_dates cal ON cal.calendar_date >= op.observation_period_start_date
-	AND cal.calendar_date <= op.observation_period_end_date
+INNER JOIN @cdm_database_schema.person p ON op.person_id = p.person_id -- n:1 join
+INNER JOIN #calendar_dates cal ON cal.calendar_date >= op.observation_period_start_date ---m:n join -- should this sql be seperated out? many calendar dates can be between cohort_start_date and cohort_end_date &
+	AND cal.calendar_date <= op.observation_period_end_date -- many persons have cohort_start_date and cohort_end_dates
 LEFT JOIN @cohort_database_schema.@cohort_table cohort ON cohort.subject_id = op.person_id
 	AND cohort.cohort_start_date <= cal.calendar_date
-LEFT JOIN #cohort_first cohort_first ON cohort.subject_id = op.person_id
+	AND cohort.cohort_start_date >= op.observation_period_start_date
+	AND cohort.cohort_end_date <= op.observation_period_end_date
+LEFT JOIN #cohort_first cohort_first ON cohort_first.subject_id = op.person_id
 	AND cohort_first.cohort_start_date <= cal.calendar_date
+	AND cohort_first.cohort_start_date >= op.observation_period_start_date
+	AND cohort_first.cohort_end_date <= op.observation_period_end_date
 GROUP BY cal.calendar_date,
 	FLOOR((YEAR(cal.calendar_date) - p.year_of_birth) / 10),
 	p.gender_concept_id;
