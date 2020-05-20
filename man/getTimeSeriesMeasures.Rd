@@ -51,9 +51,10 @@ table.}
 \item{asTsibble}{Should the returned data frame be in tsibble format?}
 }
 \value{
-Returns a tsibble (data frame) with keys (gender, ageGroup, 
-                             washoutPeriod), 
-                             index = periodBegin. The keys are parameters used in function call.
+If tsibble = TRUE (default), then returns a tsibble (data frame) with keys 
+                             (gender, ageGroup, washoutPeriod, cohortId), 
+                             index = calendarDate The keys are parameters used in function call.
+                             Else tibble
 }
 \description{
 Returns measurement per day for cohort stratified by age and gender

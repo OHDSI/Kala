@@ -3,14 +3,14 @@
 ######################################################################################
 ######################################################################################
 ######################################################################################
-filePathSourceFiles <- "z:"
+filePathSourceFiles <- "E:/ignore"
 # instantiate a cohort in scratch, get ts data and store it as an Andromeda object
 library(magrittr)
 source(paste0(filePathSourceFiles, '/ignoreThisFile.R'))
 connectionDetails = NULL
 connection = NULL
 
-options(andromedaTempFolder = "D:/andromeda/timeSeries")
+options(andromedaTempFolder = "E:/andromeda/timeSeries")
 connectionDetailsMetaData <- redShiftConnectionDetailsMetaData %>% 
   dplyr::filter(sourceKey %in% c('OPTUM_EXTENDED_DOD', #'CPRD', , 'IBM_MDCD', 'IBM_MDCR'
                                  # 'IQVIA_AUSTRALIA_EMR', 'IQVIA_FRANCE_DA',
@@ -18,7 +18,6 @@ connectionDetailsMetaData <- redShiftConnectionDetailsMetaData %>%
                                  'IBM_CCAE',
                                  'OPTUM_PANTHER')
   )
-
 
 cohort <- 'cohort'
 washoutPeriod <- 365
@@ -28,10 +27,10 @@ cohortIds <- c(11658,15996,
                16011,
                16013,
                16012,
-               16010)
+               16010,
+               10608,15942,15943,15264,11652,15266,15265,14637,11643)
 
 z <- 0
-k <- 1
 for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
   
   connectionDetailMetaData <- connectionDetailsMetaData %>% dplyr::slice(k)
@@ -45,9 +44,11 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
   print(z)
   print(paste0("working on source name = ", connectionDetailMetaData$sourceName))
   
-i <- 1
+
   for (i in (1:length(cohortIds))) { # i = 1
-    cohortId <- cohortIds[i]
+  
+    
+      cohortId <- cohortIds[i]
     # get cohorts SQL from WebApi
     sql <- ROhdsiWebApi::getCohortDefinitionSql(baseUrl = Sys.getenv("baseUrl"), 
                                                 cohortId = cohortId, 
@@ -76,13 +77,11 @@ i <- 1
                                       cohortId = cohortId,
                                       asTsibble = FALSE) 
       result <- result %>% 
-      
-        dplyr::mutate(cohortId == cohortId,
-                      cohortName == cohortName,
-                      sourceKey == connectionDetailMetaData$sourceKey,
-                      sourceName == connectionDetailMetaData$sourceName
+        dplyr::mutate(cohortName = cohortName,
+                      sourceKey = connectionDetailMetaData$sourceKey,
+                      sourceName = connectionDetailMetaData$sourceName
         )
-      print(paste0("........computed rate:", rateType))
+      print(paste0("........compute completed"))
       if (z == 0) {
         storeAndromeda <- Andromeda::andromeda(timeSeries = result)
       } else {
