@@ -102,8 +102,12 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
       print(paste0("........compute completed"))
       if (z == 0) {
         storeAndromeda <- Andromeda::andromeda(timeSeries = result)
+        Andromeda::saveAndromeda(andromeda = storeAndromeda, 
+                                 fileName = paste0(resultsFolder, '/results.zip')
+        )
       } else {
-        storeAndromeda <- Andromeda::appendToTable(timeSeries, result)
+        storeAndromeda <- Andromeda::loadAndromeda(paste0(resultsFolder, '/results.zip'))
+        Andromeda::appendToTable(storeAndromeda$timeSeries, result)
         Andromeda::saveAndromeda(andromeda = storeAndromeda, 
                                  fileName = paste0(resultsFolder, '/results.zip')
                                  )
