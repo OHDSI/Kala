@@ -35,10 +35,8 @@
 #'                              table.
 #' @param asTsibble             Should the returned data frame be in tsibble format?
 #'
-#' @return                      If tsibble = TRUE (default), then returns a tsibble (data frame) with keys 
-#'                              (gender, ageGroup, washoutPeriod, cohortId), 
-#'                              index = calendarDate The keys are parameters used in function call.
-#'                              Else tibble
+#' @return                      Returns a tsibble (data frame) with keys (gender, ageGroup, washoutPeriod), 
+#'                              index = periodBegin. The keys are parameters used in function call.
 #'                    
 #' @export
 getTimeSeriesMeasures <- function(connectionDetails = NULL,
@@ -68,13 +66,10 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
     on.exit(DatabaseConnector::disconnect(connection))
   }
   
-  cohortSummary <- getCohortSummary(
-    connection = connection,
-    cohortDatabaseSchema = cohortDatabaseSchema,
-    cohortTable = cohortTable,
-    cohortId = cohortId
-  )
-  
+  cohortSummary <- Kala::getCohortSummary(connection = connection,
+                                          cohortDatabaseSchema = cohortDatabaseSchema,
+                                          cohortTable = cohortTable,
+                                          cohortId = cohortId)
   if (cohortSummary$record == 0) {
     warning("Cohort with ID ", cohortId, " appears to be empty. Was it instantiated?")
     delta <- Sys.time() - startClockTime
@@ -84,8 +79,8 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
     return(data.frame())
   }
   
-  ParallelLogger::logInfo(paste0("Creating reference calendar_period table"))
-  startInsertTable <- Sys.time()
+ # ParallelLogger::logInfo(paste0("Creating reference calendar_period table"))
+ # startInsertTable <- Sys.time()
   sql <- SqlRender::loadRenderTranslateSql(sqlFilename = "CalendarDates.sql",
                                            packageName = "Kala",
                                            dbms = connection@dbms,
@@ -93,13 +88,12 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
                                            startDate = cohortSummary$cohortStartDateMin,
                                            endDate = cohortSummary$cohortEndDateMax)
   DatabaseConnector::executeSql(connection = connection,
-                                 sql = sql)
-  
-  delta <- Sys.time() - startInsertTable
-  ParallelLogger::logInfo(paste("   took ",
-                                signif(delta, 3),
-                                attr(delta, "units"))
-                          )
+                                               sql = sql)
+  # delta <- Sys.time() - startInsertTable
+  # ParallelLogger::logInfo(paste("   took ",
+  #                               signif(delta, 3),
+  #                               attr(delta, "units"))
+  #                         )
   
   ParallelLogger::logInfo(paste0("Calculating Timeseries measures stratified by age and gender and calendar"))
   startCalculation <- Sys.time()
@@ -111,9 +105,8 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
                                            cdm_database_schema = cdmDatabaseSchema,
                                            cohort_table = cohortTable,
                                            washout_period = washoutPeriod,
-                                           cohort_id = cohortId
-                                           )
-  DatabaseConnector::executeSql(connection, sql) #, profile = TRUE
+                                           cohort_id = cohortId)
+  DatabaseConnector::executeSql(connection, sql)
   delta <- Sys.time() - startCalculation
   ParallelLogger::logInfo(paste("   calculation took ",
                                 signif(delta, 3),
@@ -142,28 +135,19 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
     gender = stringr::str_to_sentence(gender)
     )
   
-  timeSeries <- timeSeries %>% 
-    dplyr::mutate(washoutPeriod = washoutPeriod,
-                  cohortId = cohortId)
+  result <- timeSeries %>% 
+    dplyr::mutate(washoutPeriod = 365)
   
   if (isTRUE(asTsibble)) { 
-    timeSeries <- timeSeries %>% 
-            tsibble::as_tsibble(key = c(gender, ageGroup, washoutPeriod, cohortId),
+    result <- result %>% 
+            tsibble::as_tsibble(key = c(gender, ageGroup, washoutPeriod),
                                   validate = TRUE,
                                   index = calendarDate) %>%
-              tsibble::group_by_key() %>% 
-              tsibble::fill_gaps(in_observation = 0,
-                                 at_risk_first = 0,
-                                 incidence = 0,
-                                 prevalence = 0,
-                                 incidence_first = 0,
-                                 prevalence_first = 0,
-                                 at_risk = 0
-                                 )
+              tsibble::fill_gaps(numeratorCount = 0)
   }
   delta <- Sys.time() - startClockTime
   ParallelLogger::logInfo(paste("Computing timeseries took ",
                                 signif(delta, 3),
                                 attr(delta, "units")))
-  return(timeSeries)
+  return(result)
 }

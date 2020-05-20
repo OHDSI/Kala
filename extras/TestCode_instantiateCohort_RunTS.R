@@ -44,7 +44,7 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
                                                                   server = connectionDetailMetaData$server,
                                                                   port = connectionDetailMetaData$port
   )
-  print(z)
+  
   print(paste0("working on source name = ", connectionDetailMetaData$sourceName))
   
 
@@ -100,6 +100,7 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
                       sourceName = connectionDetailMetaData$sourceName
         )
       print(paste0("........compute completed"))
+      
       if (z == 0) {
         storeAndromeda <- Andromeda::andromeda(timeSeries = result)
         Andromeda::saveAndromeda(andromeda = storeAndromeda, 
@@ -108,9 +109,13 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
       } else {
         storeAndromeda <- Andromeda::loadAndromeda(paste0(resultsFolder, '/results.zip'))
         Andromeda::appendToTable(storeAndromeda$timeSeries, result)
+        storeAndromeda
         Andromeda::saveAndromeda(andromeda = storeAndromeda, 
                                  fileName = paste0(resultsFolder, '/results.zip')
                                  )
       }
+      
+      z <- z + 1
+      print(paste0("z = ", z))
   }
 }
