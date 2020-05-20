@@ -10,7 +10,10 @@ source(paste0(filePathSourceFiles, '/ignoreThisFile.R'))
 connectionDetails = NULL
 connection = NULL
 
-options(andromedaTempFolder = "E:/andromeda/timeSeries")
+resultsFolder = "E:/andromeda/timeSeries"
+dir.create(path = resultsFolder, showWarnings = FALSE, recursive = TRUE)
+
+
 connectionDetailsMetaData <- redShiftConnectionDetailsMetaData %>% 
   dplyr::filter(sourceKey %in% c('OPTUM_EXTENDED_DOD', #'CPRD', , 'IBM_MDCD', 'IBM_MDCR'
                                  # 'IQVIA_AUSTRALIA_EMR', 'IQVIA_FRANCE_DA',
@@ -56,6 +59,21 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
     )
     cohortName <- ROhdsiWebApi::getCohortDefinition(baseUrl = Sys.getenv("baseUrl"),cohortId = cohortId)$name
     print(paste0("..cohortName: ",cohortName))
+    
+    
+    # instantiate the cohort table if needed
+    tablesInTargetSchema = tidyr::tibble(name = DatabaseConnector::getTableNames(connection = DatabaseConnector::connect(connectionDetails = connectionDetails), 
+                                     databaseSchema = connectionDetailMetaData$cohortDatabaseSchema) %>% toupper()
+                          ) %>% 
+                          dplyr::filter(name == toupper(cohort))
+    
+    if (nrow(tablesInTargetSchema) == 0) {
+      CohortDiagnostics::createCohortTable(connection = DatabaseConnector::connect(connectionDetails = connectionDetails), 
+                                           cohortDatabaseSchema = connectionDetailMetaData$cohortDatabaseSchema,
+                                           cohortTable = cohort)
+    }
+    
+    
     # instantiate the cohort
     DatabaseConnector::renderTranslateExecuteSql(connection = DatabaseConnector::connect(connectionDetails = connectionDetails),
                                                  sql = sql,
@@ -86,6 +104,9 @@ for (k in (1:nrow(connectionDetailsMetaData))) { #k = 1
         storeAndromeda <- Andromeda::andromeda(timeSeries = result)
       } else {
         storeAndromeda <- Andromeda::appendToTable(timeSeries, result)
+        Andromeda::saveAndromeda(andromeda = storeAndromeda, 
+                                 fileName = paste0(resultsFolder, '/results.zip')
+                                 )
       }
   }
 }
