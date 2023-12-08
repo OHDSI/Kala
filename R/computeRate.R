@@ -28,18 +28,14 @@
 #' @template cdmDatabaseSchema
 #' @template cohortTable
 #' @template oracleTempSchema
-#' @param firstOccurrenceOnly   Use only the first occurrence of the cohort per person?
 #' @param washoutPeriod         The minimum amount of observation time required before the occurrence
 #'                              of a cohort entry. This is also used to eliminate immortal time from
 #'                              the denominator.
-#' @param rateType              Do you want 'incidence' or 'prevalence' for a calendarPeriod? 
-#'                              Default = 'incidence'.
 #' @param cohortId              The cohort definition ID used to reference the cohort in the cohort
 #'                              table.
 #' @param asTsibble             Should the returned data frame be in tsibble format?
 #'
-#' @return                      Returns a tsibble (data frame) with keys (gender, ageGroup, 
-#'                              firstOccurrenceOnly, washoutPeriod, rateType), 
+#' @return                      Returns a tsibble (data frame) with keys (gender, ageGroup, washoutPeriod), 
 #'                              index = periodBegin. The keys are parameters used in function call.
 #'                    
 #' @export
@@ -49,10 +45,8 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
                             cdmDatabaseSchema,
                             cohortTable = 'cohort',
                             oracleTempSchema = NULL,
-                            firstOccurrenceOnly = TRUE,
                             washoutPeriod = 365,
                             cohortId,
-                            rateType = 'incidence',
                             asTsibble = TRUE) {
   
   startClockTime <- Sys.time()
@@ -63,14 +57,8 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
   checkmate::assertCharacter(cohortTable, add = errorMessage)
   checkmate::assertScalar(cohortDatabaseSchema, add = errorMessage)
   checkmate::assertCharacter(cohortDatabaseSchema, add = errorMessage)
-  checkmate::assertLogical(firstOccurrenceOnly, add = errorMessage)
   checkmate::assertInt(washoutPeriod, add = errorMessage)
-  checkmate::assertScalar(rateType, add = errorMessage)
   checkmate::assertLogical(asTsibble, add = errorMessage)
-  checkmate::assertChoice(rateType, choices = c('incidence', 'prevalence'), add = errorMessage)
-  if (!is.null(calendarDates)) {
-    checkmate::assertVector(calendarDates, unique = TRUE, min.len = 1, add = errorMessage)
-  }
   checkmate::reportAssertions(errorMessage)
   
   if (is.null(connection)) {
@@ -91,8 +79,8 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
     return(data.frame())
   }
   
-  ParallelLogger::logInfo(paste0("Creating reference calendar_period table"))
-  startInsertTable <- Sys.time()
+ # ParallelLogger::logInfo(paste0("Creating reference calendar_period table"))
+ # startInsertTable <- Sys.time()
   sql <- SqlRender::loadRenderTranslateSql(sqlFilename = "CalendarDates.sql",
                                            packageName = "Kala",
                                            dbms = connection@dbms,
@@ -101,11 +89,11 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
                                            endDate = cohortSummary$cohortEndDateMax)
   DatabaseConnector::executeSql(connection = connection,
                                                sql = sql)
-  delta <- Sys.time() - startInsertTable
-  ParallelLogger::logInfo(paste("   took ",
-                                signif(delta, 3),
-                                attr(delta, "units"))
-                          )
+  # delta <- Sys.time() - startInsertTable
+  # ParallelLogger::logInfo(paste("   took ",
+  #                               signif(delta, 3),
+  #                               attr(delta, "units"))
+  #                         )
   
   ParallelLogger::logInfo(paste0("Calculating Timeseries measures stratified by age and gender and calendar"))
   startCalculation <- Sys.time()
@@ -116,10 +104,8 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
                                            cohort_database_schema = cohortDatabaseSchema,
                                            cdm_database_schema = cdmDatabaseSchema,
                                            cohort_table = cohortTable,
-                                           first_occurrence_only = firstOccurrenceOnly,
                                            washout_period = washoutPeriod,
-                                           cohort_id = cohortId,
-                                           rateType = rateType)
+                                           cohort_id = cohortId)
   DatabaseConnector::executeSql(connection, sql)
   delta <- Sys.time() - startCalculation
   ParallelLogger::logInfo(paste("   calculation took ",
@@ -127,21 +113,21 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
                                 attr(delta, "units"))
   )
   
-  sql <- "SELECT * FROM #rates_summary;"
-  ratesSummary <- DatabaseConnector::renderTranslateQuerySql(connection = connection,
+  sql <- "SELECT * FROM #time_series;"
+  timeSeries <- DatabaseConnector::renderTranslateQuerySql(connection = connection,
                                                              sql = sql,
                                                              oracleTempSchema = oracleTempSchema,
                                                              snakeCaseToCamelCase = TRUE) %>% 
     dplyr::tibble()
   
-  sql <- "TRUNCATE TABLE #rates_summary; DROP TABLE #rates_summary;"
+  sql <- "TRUNCATE TABLE #time_series; DROP TABLE #time_series;"
   DatabaseConnector::renderTranslateExecuteSql(connection = connection,
                                                sql = sql,
                                                progressBar = FALSE,
                                                reportOverallTime = FALSE,
                                                oracleTempSchema = oracleTempSchema)
   
-  ratesSummary <- ratesSummary %>% 
+  timeSeries <- timeSeries %>% 
     dplyr::mutate(ageGroup = paste(formatC(ageGroup*10, width=2, flag="0"),
                                    formatC((ageGroup*10)+9, width=2, flag="0"),
                                    sep = "-"
@@ -149,16 +135,12 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
     gender = stringr::str_to_sentence(gender)
     )
   
-  result <- ratesSummary %>% 
-    dplyr::mutate(firstOccurrenceOnly = TRUE,
-                  washoutPeriod = 365,
-                  rateType = rateType)
+  result <- timeSeries %>% 
+    dplyr::mutate(washoutPeriod = 365)
   
   if (isTRUE(asTsibble)) { 
     result <- result %>% 
-            tsibble::as_tsibble(key = c(gender, ageGroup, 
-                                         firstOccurrenceOnly, washoutPeriod, 
-                                         rateType),
+            tsibble::as_tsibble(key = c(gender, ageGroup, washoutPeriod),
                                   validate = TRUE,
                                   index = calendarDate) %>%
               tsibble::fill_gaps(numeratorCount = 0)

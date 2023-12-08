@@ -39,3 +39,4 @@ dateSpan3 <- Kala::convertDateVectorToDateSpan(x = dateVector, unit = "week")
 
 # convert Date vector to date span - with default
 dateSpan4 <- Kala::convertDateVectorToDateSpan(x = dateVector, unit = "weeks", week_start = 7)
+
