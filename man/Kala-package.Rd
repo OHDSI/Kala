@@ -4,9 +4,9 @@
 \name{Kala-package}
 \alias{Kala}
 \alias{Kala-package}
-\title{Kala: Time series analysis for OHDSI studies}
+\title{Kala: Temporal relationships between cohort and its features}
 \description{
-kala takes one or more instantiated cohort as input and produces time series features, decomposition's, statistical summaries and convenient visualizations.
+kala studies temporal relationship between a cohort and its features
 }
 \seealso{
 Useful links:
@@ -19,11 +19,6 @@ Useful links:
 }
 \author{
 \strong{Maintainer}: Gowtham Rao \email{gowthamrao@gmail.com}
-
-Authors:
-\itemize{
-  \item Martijn Schuemie
-}
 
 Other contributors:
 \itemize{

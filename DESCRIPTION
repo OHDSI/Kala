@@ -1,50 +1,23 @@
 Package: Kala
 Type: Package
-Title: Time series analysis for OHDSI studies
-Version: 0.1.3
+Title: Temporal relationships between cohort and its features
+Version: 0.0.0
 Date: 2020-03-26
 Authors@R: c(
     person("Gowtham", "Rao", email = "gowthamrao@gmail.com", role = c("aut", "cre")),
-    person("Martijn", "Schuemie", role = c("aut")),
     person("Observational Health Data Science and Informatics", role = c("cph"))
   )
-Description: kala takes one or more instantiated cohort as input and produces time series features, decomposition's, statistical summaries and convenient visualizations.
+Description: kala studies temporal relationship between a cohort and its features
 Depends:
 	DatabaseConnector
 Imports:
 	SqlRender,
-	ggplot2,
-	ROhdsiWebApi,
-	ParallelLogger,
-	readr,
-	tibble,
-	tidyr,
-	purrr,
-	dplyr,
-	RJSONIO,
-	FeatureExtraction,
-	digest,
-	tsibble,
-	tsibbledata,
-	feasts,
-	fable,
-	fabletools,
-	lubridate,
-	usethis,
-	magrittr
+	FeatureExtraction
 Suggests:
-  testthat,
-  knitr,
-  rmarkdown,
-  shiny,
-  shinydashboard,
-  htmltools
 Remotes:
-  ohdsi/ROhdsiWebApi,
-  ohdsi/FeatureExtraction
 License: Apache License
 VignetteBuilder: knitr
 URL: https://ohdsi.github.io/Kala, https://github.com/OHDSI/Kala
 BugReports: https://github.com/OHDSI/Kala/issues
-RoxygenNote: 7.1.0
+RoxygenNote: 7.2.3
 Encoding: UTF-8
