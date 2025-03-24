@@ -60,9 +60,9 @@ executeFeatureExtraction <-
     if (addCohortBasedTemporalCovariateSettings) {
       if (!is.null(covariateSettings)) {
         timeWindows <-
-          getCovariateSettingsTimeWindows(covariateSettings = covariateSettings)
+          OhdsiHelpers::getCovariateSettingsTimeWindows(covariateSettings = covariateSettings)
       } else {
-        timeWindows <- getFeatureExtractionDefaultTimeWindows()
+        timeWindows <- OhdsiHelpers::getFeatureExtractionDefaultTimeWindows()
       }
       
       if (is.null(covariateCohortDefinitionSet)) {
@@ -103,8 +103,8 @@ executeFeatureExtraction <-
         covariateCohortDefinitionSet$covariateId
       
       cohortBasedTemporalCovariateSettings <-
-        getFeatureExtractionDefaultTemporalCohortCovariateSettings(
-          timeWindows = getCovariateSettingsTimeWindows(covariateSettings = covariateSettings),
+        OhdsiHelpers::getFeatureExtractionDefaultTemporalCohortCovariateSettings(
+          timeWindows = OhdsiHelpers::getCovariateSettingsTimeWindows(covariateSettings = covariateSettings),
           analysisId = cohortCovariateAnalysisId,
           covariateCohortDatabaseSchema = covariateCohortDatabaseSchema,
           covariateCohortTable = covariateCohortTable,
