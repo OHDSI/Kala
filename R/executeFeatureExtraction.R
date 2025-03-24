@@ -200,7 +200,7 @@ executeFeatureExtraction <-
           recursive = TRUE
         )
         FeatureExtraction::saveCovariateData(covariateData = covariateData,
-                                             file = file.path(outputFolder, cohortId))
+                                             file = file.path(outputFolder, paste0("covariateData_", "cohortId_", cohortId, ".zip")))
       } else {
         ParallelLogger::logInfo(paste0("    - skipping cohort id: ", cohortId))
       }
