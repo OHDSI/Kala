@@ -1,3 +1,3 @@
 library(testthat)
 options(dbms = "sql server")
-test_check("CohortAlgebra")
+test_check("Kala")

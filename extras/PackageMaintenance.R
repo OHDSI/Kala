@@ -1,4 +1,4 @@
-# Copyright 2023 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of Kala
 #
@@ -27,18 +27,11 @@ devtools::check()
 unlink("extras/Kala.pdf")
 shell("R CMD Rd2pdf ./ --output=extras/Kala.pdf")
 
-# Create Vignettes---------------------------------------------------------
-dir.create(file.path("inst","doc"), showWarnings = FALSE)
 # Build site---------------------------------------------------------
 pkgdown::build_site()
 OhdsiRTools::fixHadesLogo()
 
-
-
 # Release package to CRAN ------------------------------------------------------
-# devtools::check_win_devel()
-# devtools::check_rhub()
-# devtools::release()
-# devtools::check(cran=TRUE)
-
+devtools::release()
+devtools::check(cran=TRUE)
 

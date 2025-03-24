@@ -1,4 +1,4 @@
-# Copyright 2023 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of Kala
 #
@@ -18,5 +18,7 @@
 "_PACKAGE"
 
 #' @import DatabaseConnector
-#' @import magrittr
+#' @import dplyr
+#' @importFrom rlang .data
+#' @importFrom lifecycle deprecated
 NULL

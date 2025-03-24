@@ -6,7 +6,7 @@
 \alias{Kala-package}
 \title{Kala: Temporal relationships between cohort and its features}
 \description{
-kala studies temporal relationship between a cohort and its features
+Kala studies temporal relationship between a cohort and its features
 }
 \seealso{
 Useful links:

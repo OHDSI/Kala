@@ -5,12 +5,11 @@ Kala
 
 Introduction
 ============
-kala takes one or more instantiated cohort as input and produces time series features, decomposition's, statistical summaries and convenient visualizations. 
+Kala takes one or more instantiated cohort as input and produces time series features, decomposition's, statistical summaries and convenient visualizations. 
 
 Features
 ========
 - Takes an instantiated valid cohort as input object. 
-- 
 
 Screenshot
 ==========

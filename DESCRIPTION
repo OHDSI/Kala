@@ -2,12 +2,12 @@ Package: Kala
 Type: Package
 Title: Temporal relationships between cohort and its features
 Version: 0.0.0
-Date: 2020-03-26
+Date: 2025-03-24
 Authors@R: c(
     person("Gowtham", "Rao", email = "gowthamrao@gmail.com", role = c("aut", "cre")),
     person("Observational Health Data Science and Informatics", role = c("cph"))
   )
-Description: kala studies temporal relationship between a cohort and its features
+Description: Kala studies temporal relationship between a cohort and its features
 Depends:
 	DatabaseConnector
 Imports:
@@ -19,5 +19,5 @@ License: Apache License
 VignetteBuilder: knitr
 URL: https://ohdsi.github.io/Kala, https://github.com/OHDSI/Kala
 BugReports: https://github.com/OHDSI/Kala/issues
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Encoding: UTF-8
