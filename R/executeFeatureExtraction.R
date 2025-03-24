@@ -117,8 +117,7 @@ executeFeatureExtraction <-
     if (is.null(covariateSettings)) {
       covariateSettings <- cohortBasedTemporalCovariateSettings
     } else {
-      covariateSettings <- list(covariateSettings,
-                                cohortBasedTemporalCovariateSettings)
+      covariateSettings <- list(covariateSettings)
     }
     
     if (!is.null(outputFolder)) {
