@@ -4,9 +4,9 @@
 \name{Kala-package}
 \alias{Kala}
 \alias{Kala-package}
-\title{Kala: Time series analysis for OHDSI studies}
+\title{Kala: Tools for Exploring Temporal Relationships Between Cohorts and Their Features}
 \description{
-kala takes one or more instantiated cohort as input and produces time series features, decomposition's, statistical summaries and convenient visualizations.
+The 'Kala' package provides a streamlined workflow to generate and explore temporal features for cohorts in the OMOP Common Data Model. By leveraging 'FeatureExtraction' and its 'temporalCovariateSettings', 'Kala' produces both tabular and graphical summaries of features across configurable time windows. These outputs allow easy comparisons and time-series analyses for identifying patterns, trends, or changes in clinical features over time.
 }
 \seealso{
 Useful links:
@@ -19,11 +19,6 @@ Useful links:
 }
 \author{
 \strong{Maintainer}: Gowtham Rao \email{gowthamrao@gmail.com}
-
-Authors:
-\itemize{
-  \item Martijn Schuemie
-}
 
 Other contributors:
 \itemize{
