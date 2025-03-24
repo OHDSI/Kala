@@ -8,7 +8,6 @@ executeFeatureExtraction(
   connectionDetails = NULL,
   connection = NULL,
   cdmDatabaseSchema,
-  vocabularyDatabaseSchema = cdmDatabaseSchema,
   cohortDatabaseSchema,
   cohortIds,
   cohortTable,
@@ -35,9 +34,6 @@ executeFeatureExtraction(
 
 \item{cdmDatabaseSchema}{Schema name where your patient-level data in OMOP CDM format resides.
 For SQL Server, include both database and schema name (e.g., 'cdm_data.dbo').}
-
-\item{vocabularyDatabaseSchema}{Schema name where your OMOP vocabulary tables reside.
-For SQL Server, include both database and schema name (e.g., 'vocabulary.dbo').}
 
 \item{cohortDatabaseSchema}{Schema name where your cohort tables reside. For SQL Server,
 include both database and schema name (e.g., 'scratch.dbo').}
@@ -79,20 +75,6 @@ No explicit return value. The function saves the covariate data files to the spe
 }
 \description{
 This function executes the feature extraction on one or more cohortId in a cohort table and returns covariate data.
-}
-\details{
-The function performs the following tasks:
-\enumerate{
-  \item Establishes a connection to the database using connection details if no connection is provided.
-  \item Validates and creates the output folder if it does not exist.
-  \item Checks that only one cohort is provided if aggregated data is disabled.
-  \item Configures cohort-based temporal covariate settings when requested.
-  \item Optionally creates a temporary table (when using a row identifier other than "subject_id")
-        to store cohort data with row numbers.
-  \item Iterates over each cohort ID and extracts covariate data via \code{FeatureExtraction::getDbCovariateData}.
-  \item Saves the extracted covariate data to a zip file in the output folder.
-  \item Cleans up any temporary tables that were created.
-}
 }
 \examples{
 \dontrun{

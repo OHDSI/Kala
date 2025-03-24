@@ -19,28 +19,12 @@
 #' @description
 #' This function executes the feature extraction on one or more cohortId in a cohort table and returns covariate data.
 #'
-#' @details
-#' The function performs the following tasks:
-#' \enumerate{
-#'   \item Establishes a connection to the database using connection details if no connection is provided.
-#'   \item Validates and creates the output folder if it does not exist.
-#'   \item Checks that only one cohort is provided if aggregated data is disabled.
-#'   \item Configures cohort-based temporal covariate settings when requested.
-#'   \item Optionally creates a temporary table (when using a row identifier other than "subject_id")
-#'         to store cohort data with row numbers.
-#'   \item Iterates over each cohort ID and extracts covariate data via \code{FeatureExtraction::getDbCovariateData}.
-#'   \item Saves the extracted covariate data to a zip file in the output folder.
-#'   \item Cleans up any temporary tables that were created.
-#' }
-#'
 #' @param connectionDetails   An object of type \code{connectionDetails} as created using
 #'                            \code{\link[DatabaseConnector]{createConnectionDetails}}. Can be left NULL if \code{connection} is provided. Both cannot be NULL.
 #' @param connection          An object of type \code{connection} as created using
 #'                            \code{\link[DatabaseConnector]{connect}}. Can be left NULL if \code{connectionDetails} is provided. Both cannot be NULL.
 #' @param cdmDatabaseSchema   Schema name where your patient-level data in OMOP CDM format resides.
 #'                            For SQL Server, include both database and schema name (e.g., 'cdm_data.dbo').
-#' @param vocabularyDatabaseSchema   Schema name where your OMOP vocabulary tables reside.
-#'                               For SQL Server, include both database and schema name (e.g., 'vocabulary.dbo').
 #' @param cohortIds           Vector of cohort IDs for which covariate extraction is to be performed.
 #' @param cohortDatabaseSchema   Schema name where your cohort tables reside. For SQL Server,
 #'                               include both database and schema name (e.g., 'scratch.dbo').
@@ -82,7 +66,6 @@ executeFeatureExtraction <-
   function(connectionDetails = NULL,
            connection = NULL,
            cdmDatabaseSchema,
-           vocabularyDatabaseSchema = cdmDatabaseSchema,
            cohortDatabaseSchema,
            cohortIds,
            cohortTable,
@@ -159,7 +142,7 @@ executeFeatureExtraction <-
 
       cohortBasedTemporalCovariateSettings <-
         getFeatureExtractionDefaultTemporalCohortCovariateSettings(
-          timeWindows = getCovariateSettingsTimeWindows(covariateSettings = covariateSettings),
+          timeWindows = timeWindows,
           analysisId = cohortCovariateAnalysisId,
           covariateCohortDatabaseSchema = covariateCohortDatabaseSchema,
           covariateCohortTable = covariateCohortTable,

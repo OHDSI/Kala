@@ -74,8 +74,8 @@ compareTibbles <- function(tibble1, tibble2) {
   columns2 <- sort(names(tibble2))
 
   # Find additional columns
-  additionalColumns1 <- setdiff(columns1, columns2)
-  additionalColumns2 <- setdiff(columns2, columns1)
+  additionalColumns1 <- dplyr::setdiff(columns1, columns2)
+  additionalColumns2 <- dplyr::setdiff(columns2, columns1)
 
   result$additionalColumnsInFirst <- additionalColumns1
   result$additionalColumnsInSecond <- additionalColumns2
@@ -111,10 +111,10 @@ compareTibbles <- function(tibble1, tibble2) {
   result$additionalRowsInSecond <- additionalRows2
 
   # Find rows present in first but not in second
-  diffRows1 <- setdiff(tibble1, tibble2)
+  diffRows1 <- dplyr::setdiff(tibble1, tibble2)
 
   # Find rows present in second but not in first
-  diffRows2 <- setdiff(tibble2, tibble1)
+  diffRows2 <- dplyr::setdiff(tibble2, tibble1)
 
   result$presentInFirstNotSecond <- diffRows1
   result$presentInSecondNotFirst <- diffRows2

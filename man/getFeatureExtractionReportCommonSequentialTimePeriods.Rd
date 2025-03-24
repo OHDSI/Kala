@@ -19,13 +19,6 @@ The returned tibble defines prior monthly periods, post monthly periods, and a s
 each characterized by a unique time identifier, a start day, and an end day.
 }
 \details{
-The function defines:
-\enumerate{
-  \item \strong{Prior Monthly Periods:} A set of periods defined with start days ranging from -391 to -31,
-        all ending at -1.
-  \item \strong{Post Monthly Periods:} A set of periods starting on day 1 with varying end days from 1 to 361.
-  \item \strong{On Day Of:} A single-day period where both the start and end day are 0.
-}
 These periods are combined and arranged in ascending order based on the \code{timeId} column.
 }
 \examples{

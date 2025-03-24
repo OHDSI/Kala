@@ -5,7 +5,6 @@
 \title{Get Non-Time-Varying Feature Extraction Report}
 \usage{
 getFeatureExtractionReportNonTimeVarying(
-  cdmSources,
   covariateDataPath,
   cohortId,
   cohortDefinitionSet,
@@ -14,8 +13,6 @@ getFeatureExtractionReportNonTimeVarying(
 )
 }
 \arguments{
-\item{cdmSources}{An object (or list of objects) representing the Common Data Model (CDM) sources.}
-
 \item{covariateDataPath}{A character string specifying the file path to the covariate data.}
 
 \item{cohortId}{A numeric or character identifier for the cohort. This ID is used both to filter covariate data and
@@ -38,16 +35,6 @@ This function generates a non-time-varying feature extraction report by calling
 the formatted output to remove specific covariates based on a regular expression pattern.
 }
 \details{
-This function calls \code{getFeatureExtractionReportInParallel} with settings tailored to generate a report that
-includes non-time-varying covariates. Key parameters used include:
-
-\itemize{
-  \item \code{includeNonTimeVarying = TRUE} to ensure non-time-varying covariates are included.
-  \item \code{minAverageValue = 0.01} to filter out covariates with very low average values.
-  \item \code{simple = TRUE} to produce a simplified report format.
-  \item \code{covariateDataFileNamePattern} is set to match the cohort ID.
-}
-
 After generating the report, if a non-\code{NULL} \code{remove} pattern is provided, the function writes a message
 indicating that it is removing matching labels from the formatted report, and then filters out any rows in the \code{formatted}
 report whose \code{label} matches the pattern.

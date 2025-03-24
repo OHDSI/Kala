@@ -27,13 +27,6 @@
 #'   \item{endDay}{The end day of the time period relative to a reference date.}
 #'
 #' @details
-#' The function defines:
-#' \enumerate{
-#'   \item \strong{Prior Monthly Periods:} A set of periods defined with start days ranging from -391 to -31,
-#'         all ending at -1.
-#'   \item \strong{Post Monthly Periods:} A set of periods starting on day 1 with varying end days from 1 to 361.
-#'   \item \strong{On Day Of:} A single-day period where both the start and end day are 0.
-#' }
 #' These periods are combined and arranged in ascending order based on the \code{timeId} column.
 #'
 #' @examples
@@ -66,24 +59,22 @@ getFeatureExtractionReportCommonSequentialTimePeriods <-
       ),
       endDay = c(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
     )
-
+    
     # Define post monthly periods with their time IDs, start days, and end days
     postMonthlyPeriods <- dplyr::tibble(
       timeId = c(58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70),
       startDay = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
       endDay = c(1, 31, 61, 91, 121, 151, 181, 211, 241, 271, 301, 331, 361)
     )
-
+    
     # Define a specific time period representing "on day of" (a single day period)
-    onDayOf <- dplyr::tibble(
-      timeId = 53,
-      startDay = 0,
-      endDay = 0
-    )
-
+    onDayOf <- dplyr::tibble(timeId = 53,
+                             startDay = 0,
+                             endDay = 0)
+    
     # Combine all time periods and arrange by timeId
     timePeriods <- dplyr::bind_rows(priorMonthlyPeriods, postMonthlyPeriods, onDayOf) |>
-      dplyr::arrange(timeId)
-
+      dplyr::arrange(.data$timeId)
+    
     return(timePeriods)
   }

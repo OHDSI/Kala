@@ -14,7 +14,6 @@ getFeatureExtractionReportByTimeWindows(
   excludedCovariateIds = NULL,
   table1Specifications = NULL,
   cohortId,
-  cohortDefinitionSet,
   databaseId = NULL,
   cohortName = NULL,
   reportName = NULL,
@@ -56,8 +55,6 @@ excluded.}
 columns for label and covariateIds.}
 
 \item{cohortId}{The cohort definition ID to generate the report for.}
-
-\item{cohortDefinitionSet}{A data frame containing cohort definitions.}
 
 \item{databaseId}{Optional database ID to include in the report header.}
 

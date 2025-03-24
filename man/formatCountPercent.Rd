@@ -23,11 +23,6 @@ with commas using \code{formatIntegerWithComma}, and the percentage is formatted
 with a specified number of decimal digits. The resulting string is in the format: "formattedCount (formattedPercent)".
 }
 \details{
-This function relies on two helper functions:
-\itemize{
-  \item \code{formatIntegerWithComma}: Formats a numeric count with commas as thousand separators.
-  \item \code{formatPercent}: Formats a numeric percentage to a string representation with a specified number of digits.
-}
 The function concatenates the outputs of these helpers with additional formatting.
 }
 \examples{

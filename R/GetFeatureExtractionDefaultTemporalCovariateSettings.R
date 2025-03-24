@@ -82,7 +82,7 @@ getFeatureExtractionDefaultTemporalCovariateSettings <-
     ) |>
       dplyr::tibble() |>
       dplyr::distinct() |>
-      dplyr::arrange(startDay)
+      dplyr::arrange(.data$startDay)
 
     featureExtractionSettings <-
       FeatureExtraction::createTemporalCovariateSettings(

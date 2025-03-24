@@ -13,8 +13,10 @@ formatIntegerWithComma(number)
 A character string representing the formatted integer with commas.
 }
 \description{
-This function formats a numeric value as an integer and inserts commas as thousand separators.
-It utilizes \code{formatC} with \code{format = "d"} and \code{big.mark = ","} to produce a human-readable string.
+This function formats a numeric value by first truncating any fractional part.
+If the input number is a whole number (i.e., it has no fractional part), the function
+inserts commas as thousand separators using \code{formatC} with \code{format = "d"} and \code{big.mark = ","}.
+For non-whole numbers, only the integer portion is returned as a character string without commas.
 }
 \examples{
 formatIntegerWithComma(1234567)

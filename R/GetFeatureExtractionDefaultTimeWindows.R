@@ -57,15 +57,20 @@ getFeatureExtractionDefaultTimeWindows <-
     }
 
     timeWindows <- timeWindows |>
-      dplyr::mutate(periodName = paste0("d", startDay |> as.integer(), "d", endDay |> as.integer()))
+      dplyr::mutate(periodName = paste0(
+        "d",
+        .data$startDay |> as.integer(),
+        "d",
+        .data$endDay |> as.integer()
+      ))
 
     if (isTRUE(selectedCummulative)) {
       filteredDataFrame <- timeWindows |>
-        dplyr::select(startDay, endDay) |>
+        dplyr::select(.data$startDay, .data$endDay) |>
         dplyr::filter(
-          startDay %in% c(-391, -301, -181, -91, -31) |
-            endDay %in% c(0, 31, 91, 181, 241, 361) |
-            (startDay == 0 & endDay == 0)
+          .data$startDay %in% c(-391, -301, -181, -91, -31) |
+            .data$endDay %in% c(0, 31, 91, 181, 241, 361) |
+            (.data$startDay == 0 & .data$endDay == 0)
         ) |>
         dplyr::mutate(selectedCummulative = 1) |>
         dplyr::distinct()
@@ -75,7 +80,12 @@ getFeatureExtractionDefaultTimeWindows <-
     }
 
     timeWindows <- timeWindows |>
-      dplyr::select(startDay, endDay, periodName, windowType) |>
+      dplyr::select(
+        .data$startDay,
+        .data$endDay,
+        .data$periodName,
+        .data$windowType
+      ) |>
       dplyr::distinct()
 
 

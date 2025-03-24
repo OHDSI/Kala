@@ -21,7 +21,6 @@
 #' \code{getFeatureExtractionReportInParallel} with predefined settings and then filtering
 #' the formatted output to remove specific covariates based on a regular expression pattern.
 #'
-#' @param cdmSources An object (or list of objects) representing the Common Data Model (CDM) sources.
 #' @param covariateDataPath A character string specifying the file path to the covariate data.
 #' @param cohortId A numeric or character identifier for the cohort. This ID is used both to filter covariate data and
 #'   as part of the file name pattern for retrieving covariate data.
@@ -35,16 +34,6 @@
 #'   If the report generation returns \code{NULL}, then \code{NULL} is returned.
 #'
 #' @details
-#' This function calls \code{getFeatureExtractionReportInParallel} with settings tailored to generate a report that
-#' includes non-time-varying covariates. Key parameters used include:
-#'
-#' \itemize{
-#'   \item \code{includeNonTimeVarying = TRUE} to ensure non-time-varying covariates are included.
-#'   \item \code{minAverageValue = 0.01} to filter out covariates with very low average values.
-#'   \item \code{simple = TRUE} to produce a simplified report format.
-#'   \item \code{covariateDataFileNamePattern} is set to match the cohort ID.
-#' }
-#'
 #' After generating the report, if a non-\code{NULL} \code{remove} pattern is provided, the function writes a message
 #' indicating that it is removing matching labels from the formatted report, and then filters out any rows in the \code{formatted}
 #' report whose \code{label} matches the pattern.
@@ -64,14 +53,12 @@
 #'
 #' @export
 getFeatureExtractionReportNonTimeVarying <-
-  function(cdmSources,
-           covariateDataPath,
+  function(covariateDataPath,
            cohortId,
            cohortDefinitionSet,
            remove = "Visit Count|Chads 2 Vasc|Demographics Index Month|Demographics Post Observation Time|Visit Concept Count|Chads 2|Demographics Prior Observation Time|Dcsi|Demographics Time In Cohort|Demographics Index Year Month") {
     output <-
-      getFeatureExtractionReportInParallel(
-        cdmSources = cdmSources,
+      getFeatureExtractionReport(
         covariateDataPath = covariateDataPath,
         includeNonTimeVarying = TRUE,
         minAverageValue = 0.01,
@@ -82,7 +69,6 @@ getFeatureExtractionReportNonTimeVarying <-
         cohortId = cohortId,
         covariateDataFileNamePattern = paste0(cohortId, "$"),
         cohortDefinitionSet = cohortDefinitionSet,
-        databaseId = NULL,
         cohortName = NULL,
         reportName = NULL,
         format = TRUE

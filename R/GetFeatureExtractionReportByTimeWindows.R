@@ -46,7 +46,6 @@
 #' @param table1Specifications Optional data frame with specifications for formatting as a Table 1, containing
 #'   columns for label and covariateIds.
 #' @param cohortId The cohort definition ID to generate the report for.
-#' @param cohortDefinitionSet A data frame containing cohort definitions.
 #' @param databaseId Optional database ID to include in the report header.
 #' @param cohortName Optional cohort name to include in the report header.
 #' @param reportName Optional report name to include in the report header.
@@ -95,29 +94,27 @@
 #' }
 #'
 #' @export
-getFeatureExtractionReportByTimeWindows <- function(
-    covariateData,
-    startDays = NULL,
-    endDays = NULL,
-    includeNonTimeVarying = FALSE,
-    minAverageValue = 0.01,
-    includedCovariateIds = NULL,
-    excludedCovariateIds = NULL,
-    table1Specifications = NULL,
-    cohortId,
-    cohortDefinitionSet,
-    databaseId = NULL,
-    cohortName = NULL,
-    reportName = NULL,
-    format = TRUE,
-    distributionStatistic = c(
-      "averageValue",
-      "standardDeviation",
-      "medianValue",
-      "p25Value",
-      "p75Value"
-    ),
-    pivot = TRUE) {
+getFeatureExtractionReportByTimeWindows <- function(covariateData,
+                                                    startDays = NULL,
+                                                    endDays = NULL,
+                                                    includeNonTimeVarying = FALSE,
+                                                    minAverageValue = 0.01,
+                                                    includedCovariateIds = NULL,
+                                                    excludedCovariateIds = NULL,
+                                                    table1Specifications = NULL,
+                                                    cohortId,
+                                                    databaseId = NULL,
+                                                    cohortName = NULL,
+                                                    reportName = NULL,
+                                                    format = TRUE,
+                                                    distributionStatistic = c(
+                                                      "averageValue",
+                                                      "standardDeviation",
+                                                      "medianValue",
+                                                      "p25Value",
+                                                      "p75Value"
+                                                    ),
+                                                    pivot = TRUE) {
   # Check if table1Specifications is provided and process covariateIds
   if (!is.null(table1Specifications)) {
     if (nrow(table1Specifications) == 0) {
@@ -141,30 +138,26 @@ getFeatureExtractionReportByTimeWindows <- function(
   # Join covariateRef and analysisRef to get full covariate information
   covariateAnalysisId <- covariateData$covariateRef |>
     dplyr::select(
-      covariateId,
-      analysisId,
-      covariateName,
-      conceptId
+      .data$covariateId,
+      .data$analysisId,
+      .data$covariateName,
+      .data$conceptId
     ) |>
     dplyr::inner_join(
       covariateData$analysisRef |>
-        dplyr::select(
-          analysisId,
-          analysisName,
-          domainId
-        ),
+        dplyr::select(.data$analysisId, .data$analysisName, .data$domainId),
       by = "analysisId"
     )
 
   # Filter by included/excluded covariateIds if specified
   if (!is.null(includedCovariateIds)) {
     covariateAnalysisId <- covariateAnalysisId |>
-      dplyr::filter(covariateId %in% includedCovariateIds)
+      dplyr::filter(.data$covariateId %in% includedCovariateIds)
   }
 
   if (!is.null(excludedCovariateIds)) {
     covariateAnalysisId <- covariateAnalysisId |>
-      dplyr::filter(!covariateId %in% excludedCovariateIds)
+      dplyr::filter(!.data$covariateId %in% excludedCovariateIds)
   }
 
   reportTimeVarying <- dplyr::tibble()
@@ -179,55 +172,50 @@ getFeatureExtractionReportByTimeWindows <- function(
     startDays <-
       covariateData$timeRef |>
       dplyr::collect() |>
-      dplyr::pull(startDay)
+      dplyr::pull(.data$startDay)
     endDays <-
       covariateData$timeRef |>
       dplyr::collect() |>
-      dplyr::pull(endDay)
+      dplyr::pull(.data$endDay)
   }
 
   # Process time-varying covariates
   if (any(!is.null(startDays), !is.null(endDays))) {
     # Binary covariates
     reportTimeVarying1 <- covariateData$covariates |>
-      dplyr::filter(cohortDefinitionId == cohortId) |>
+      dplyr::filter(.data$cohortDefinitionId == cohortId) |>
       dplyr::inner_join(
         covariateData$timeRef |>
-          dplyr::filter(
-            startDay %in% startDays,
-            endDay %in% endDays
-          ) |>
+          dplyr::filter(.data$startDay %in% startDays, .data$endDay %in% endDays) |>
           dplyr::mutate(
             periodName = paste0(
               "d",
-              startDay |> as.integer(),
+              .data$startDay |> as.integer(),
               "d",
-              endDay |> as.integer()
+              .data$endDay |> as.integer()
             )
           ),
         by = "timeId"
       ) |>
-      dplyr::inner_join(covariateAnalysisId,
-        by = "covariateId"
-      ) |>
+      dplyr::inner_join(covariateAnalysisId, by = "covariateId") |>
       dplyr::arrange(
-        startDay,
-        endDay,
-        dplyr::desc(averageValue)
+        .data$startDay,
+        .data$endDay,
+        dplyr::desc(.data$averageValue)
       ) |>
       dplyr::select(
-        covariateId,
-        covariateName,
-        conceptId,
-        analysisId,
-        analysisName,
-        domainId,
-        timeId,
-        periodName,
-        sumValue,
-        averageValue
+        .data$covariateId,
+        .data$covariateName,
+        .data$conceptId,
+        .data$analysisId,
+        .data$analysisName,
+        .data$domainId,
+        .data$timeId,
+        .data$periodName,
+        .data$sumValue,
+        .data$averageValue
       ) |>
-      dplyr::filter(averageValue > minAverageValue) |>
+      dplyr::filter(.data$averageValue > minAverageValue) |>
       dplyr::collect() |>
       dplyr::mutate(continuous = 0)
 
@@ -236,30 +224,25 @@ getFeatureExtractionReportByTimeWindows <- function(
       # Get statistics for continuous covariates
       reportTimeVarying2a <-
         covariateData$covariatesContinuous |>
-        dplyr::filter(cohortDefinitionId == cohortId) |>
+        dplyr::filter(.data$cohortDefinitionId == cohortId) |>
         dplyr::inner_join(
           covariateData$timeRef |>
-            dplyr::filter(
-              startDay %in% startDays,
-              endDay %in% endDays
-            ) |>
+            dplyr::filter(.data$startDay %in% startDays, .data$endDay %in% endDays) |>
             dplyr::mutate(
               periodName = paste0(
                 "d",
-                startDay |> as.integer(),
+                .data$startDay |> as.integer(),
                 "d",
-                endDay |> as.integer()
+                .data$endDay |> as.integer()
               )
             ),
           by = "timeId"
         ) |>
-        dplyr::inner_join(covariateAnalysisId,
-          by = "covariateId"
-        ) |>
+        dplyr::inner_join(covariateAnalysisId, by = "covariateId") |>
         dplyr::arrange(
-          startDay,
-          endDay,
-          dplyr::desc(averageValue)
+          .data$startDay,
+          .data$endDay,
+          dplyr::desc(.data$averageValue)
         ) |>
         dplyr::select(
           "covariateId",
@@ -272,61 +255,53 @@ getFeatureExtractionReportByTimeWindows <- function(
           "periodName",
           dplyr::all_of(distributionStatistic)
         ) |>
-        dplyr::filter(averageValue > minAverageValue) |>
+        dplyr::filter(.data$averageValue > minAverageValue) |>
         dplyr::collect() |>
         tidyr::pivot_longer(
           cols = dplyr::all_of(distributionStatistic),
           names_to = "statistic",
           values_to = "averageValue"
         ) |>
-        dplyr::mutate(statistic = stringr::str_replace(
-          string = statistic,
-          pattern = "Value",
-          replacement = ""
-        )) |>
-        dplyr::mutate(covariateName = paste0(covariateName, " (", statistic, ")")) |>
-        dplyr::select(-statistic)
+        dplyr::mutate(
+          statistic = stringr::str_replace(
+            string = .data$statistic,
+            pattern = "Value",
+            replacement = ""
+          )
+        ) |>
+        dplyr::mutate(covariateName = paste0(.data$covariateName, " (", .data$statistic, ")")) |>
+        dplyr::select(-.data$statistic)
 
       # Get count values for continuous covariates
       reportTimeVarying2b <-
         covariateData$covariatesContinuous |>
-        dplyr::filter(cohortDefinitionId == cohortId) |>
+        dplyr::filter(.data$cohortDefinitionId == cohortId) |>
         dplyr::inner_join(
           covariateData$timeRef |>
-            dplyr::filter(
-              startDay %in% startDays,
-              endDay %in% endDays
-            ) |>
+            dplyr::filter(.data$startDay %in% startDays, .data$endDay %in% endDays) |>
             dplyr::mutate(
               periodName = paste0(
                 "d",
-                startDay |> as.integer(),
+                .data$startDay |> as.integer(),
                 "d",
-                endDay |> as.integer()
+                .data$endDay |> as.integer()
               )
             ),
           by = "timeId"
         ) |>
-        dplyr::inner_join(covariateAnalysisId,
-          by = "covariateId"
-        ) |>
+        dplyr::inner_join(covariateAnalysisId, by = "covariateId") |>
         dplyr::select(
-          covariateId,
-          timeId,
-          periodName,
-          countValue
+          .data$covariateId,
+          .data$timeId,
+          .data$periodName,
+          .data$countValue
         ) |>
-        dplyr::rename(sumValue = countValue) |>
+        dplyr::rename(sumValue = .data$countValue) |>
         dplyr::collect()
 
       # Join statistics with counts for continuous covariates
       reportTimeVarying2 <- reportTimeVarying2a |>
-        dplyr::inner_join(reportTimeVarying2b,
-          by = c(
-            "covariateId",
-            "periodName"
-          )
-        ) |>
+        dplyr::inner_join(reportTimeVarying2b, by = c("covariateId", "periodName")) |>
         dplyr::mutate(continuous = 1)
     } else {
       reportTimeVarying2 <- dplyr::tibble()
@@ -335,42 +310,35 @@ getFeatureExtractionReportByTimeWindows <- function(
     # Combine binary and continuous time-varying covariates
     reportTimeVarying <- dplyr::tibble()
     if (nrow(reportTimeVarying1) > 0) {
-      reportTimeVarying <- dplyr::bind_rows(
-        reportTimeVarying,
-        reportTimeVarying1
-      )
+      reportTimeVarying <- dplyr::bind_rows(reportTimeVarying, reportTimeVarying1)
     }
     if (nrow(reportTimeVarying2) > 0) {
-      reportTimeVarying <- dplyr::bind_rows(
-        reportTimeVarying,
-        reportTimeVarying2
-      )
+      reportTimeVarying <- dplyr::bind_rows(reportTimeVarying, reportTimeVarying2)
     }
 
     # Format the report if needed
-    if (all(
-      nrow(reportTimeVarying) > 0,
-      length(colnames(reportTimeVarying) > 0),
-      format
-    )) {
+    if (all(nrow(reportTimeVarying) > 0, length(colnames(reportTimeVarying) > 0), format)) {
       reportTimeVarying <-
         dplyr::bind_rows(
           reportTimeVarying |>
-            dplyr::filter(continuous == 0) |>
+            dplyr::filter(.data$continuous == 0) |>
             dplyr::mutate(
-              report = formatCountPercent(count = sumValue, percent = averageValue)
+              report = formatCountPercent(
+                count = .data$sumValue,
+                percent = .data$averageValue
+              )
             ),
           reportTimeVarying |>
-            dplyr::filter(continuous == 1) |>
+            dplyr::filter(.data$continuous == 1) |>
             dplyr::mutate(
               report = formatDecimalWithComma(
-                number = averageValue,
+                number = .data$averageValue,
                 decimalPlaces = 1,
                 round = 1
               )
             )
         ) |>
-        dplyr::select(-continuous)
+        dplyr::select(-.data$continuous)
     } else {
       reportTimeVarying <- dplyr::tibble()
     }
@@ -381,33 +349,31 @@ getFeatureExtractionReportByTimeWindows <- function(
     # Check if timeId column exists and filter accordingly
     if ("timeId" %in% colnames(covariateData$covariates)) {
       covariateDataTemp <- covariateData$covariates |>
-        dplyr::filter(cohortDefinitionId == cohortId) |>
-        dplyr::filter(is.na(timeId))
+        dplyr::filter(.data$cohortDefinitionId == cohortId) |>
+        dplyr::filter(is.na(.data$timeId))
     } else {
       covariateDataTemp <- covariateData$covariates |>
-        dplyr::filter(cohortDefinitionId == cohortId)
+        dplyr::filter(.data$cohortDefinitionId == cohortId)
     }
 
     # Binary non-time-varying covariates
     reportNonTimeVarying1 <- covariateDataTemp |>
-      dplyr::inner_join(covariateAnalysisId,
-        by = "covariateId"
-      ) |>
-      dplyr::arrange(dplyr::desc(averageValue)) |>
+      dplyr::inner_join(covariateAnalysisId, by = "covariateId") |>
+      dplyr::arrange(dplyr::desc(.data$averageValue)) |>
       dplyr::mutate(periodName = "nonTimeVarying") |>
       dplyr::select(
-        covariateId,
-        covariateName,
-        conceptId,
-        analysisId,
-        analysisName,
-        domainId,
-        timeId,
-        periodName,
-        sumValue,
-        averageValue
+        .data$covariateId,
+        .data$covariateName,
+        .data$conceptId,
+        .data$analysisId,
+        .data$analysisName,
+        .data$domainId,
+        .data$timeId,
+        .data$periodName,
+        .data$sumValue,
+        .data$averageValue
       ) |>
-      dplyr::filter(averageValue > minAverageValue) |>
+      dplyr::filter(.data$averageValue > minAverageValue) |>
       dplyr::collect() |>
       dplyr::mutate(continuous = 0)
 
@@ -416,20 +382,18 @@ getFeatureExtractionReportByTimeWindows <- function(
       # Check if timeId column exists and filter accordingly
       if ("timeId" %in% colnames(covariateData$covariatesContinuous)) {
         covariatesContinuousTemp <- covariateData$covariatesContinuous |>
-          dplyr::filter(cohortDefinitionId == cohortId) |>
-          dplyr::filter(is.na(timeId))
+          dplyr::filter(.data$cohortDefinitionId == cohortId) |>
+          dplyr::filter(is.na(.data$timeId))
       } else {
         covariatesContinuousTemp <- covariateData$covariatesContinuous |>
-          dplyr::filter(cohortDefinitionId == cohortId)
+          dplyr::filter(.data$cohortDefinitionId == cohortId)
       }
 
       # Get statistics for continuous non-time-varying covariates
       reportNonTimeVarying2a <-
         covariatesContinuousTemp |>
-        dplyr::inner_join(covariateAnalysisId,
-          by = "covariateId"
-        ) |>
-        dplyr::arrange(dplyr::desc(averageValue)) |>
+        dplyr::inner_join(covariateAnalysisId, by = "covariateId") |>
+        dplyr::arrange(dplyr::desc(.data$averageValue)) |>
         dplyr::mutate(periodName = "nonTimeVarying") |>
         dplyr::select(
           "covariateId",
@@ -442,45 +406,42 @@ getFeatureExtractionReportByTimeWindows <- function(
           "periodName",
           dplyr::all_of(distributionStatistic)
         ) |>
-        dplyr::filter(averageValue > minAverageValue) |>
+        dplyr::filter(.data$averageValue > minAverageValue) |>
         dplyr::collect() |>
         tidyr::pivot_longer(
           cols = dplyr::all_of(distributionStatistic),
           names_to = "statistic",
           values_to = "averageValue"
         ) |>
-        dplyr::mutate(statistic = stringr::str_replace(
-          string = statistic,
-          pattern = "Value",
-          replacement = ""
-        )) |>
-        dplyr::mutate(covariateName = paste0(covariateName, " (", statistic, ")")) |>
-        dplyr::select(-statistic)
+        dplyr::mutate(
+          statistic = stringr::str_replace(
+            string = .data$statistic,
+            pattern = "Value",
+            replacement = ""
+          )
+        ) |>
+        dplyr::mutate(covariateName = paste0(.data$covariateName, " (", .data$statistic, ")")) |>
+        dplyr::select(-.data$statistic)
 
       # Get count values for continuous non-time-varying covariates
       reportNonTimeVarying2b <-
         covariatesContinuousTemp |>
-        dplyr::inner_join(covariateAnalysisId,
-          by = "covariateId"
-        ) |>
-        dplyr::arrange(dplyr::desc(averageValue)) |>
+        dplyr::inner_join(covariateAnalysisId, by = "covariateId") |>
+        dplyr::arrange(dplyr::desc(.data$averageValue)) |>
         dplyr::mutate(periodName = "nonTimeVarying") |>
         dplyr::select(
-          covariateId,
-          timeId,
-          periodName,
-          countValue
+          .data$covariateId,
+          .data$timeId,
+          .data$periodName,
+          .data$countValue
         ) |>
-        dplyr::rename(sumValue = countValue) |>
+        dplyr::rename(sumValue = .data$countValue) |>
         dplyr::collect()
 
       # Join statistics with counts for continuous non-time-varying covariates
       reportNonTimeVarying2 <- reportNonTimeVarying2a |>
         dplyr::inner_join(reportNonTimeVarying2b,
-          by = c(
-            "covariateId",
-            "periodName"
-          )
+          by = c("covariateId", "periodName")
         ) |>
         dplyr::mutate(continuous = 1)
     } else {
@@ -490,16 +451,10 @@ getFeatureExtractionReportByTimeWindows <- function(
     # Combine binary and continuous non-time-varying covariates
     reportNonTimeVarying <- dplyr::tibble()
     if (nrow(reportNonTimeVarying1) > 0) {
-      reportNonTimeVarying <- dplyr::bind_rows(
-        reportNonTimeVarying,
-        reportNonTimeVarying1
-      )
+      reportNonTimeVarying <- dplyr::bind_rows(reportNonTimeVarying, reportNonTimeVarying1)
     }
     if (nrow(reportNonTimeVarying2) > 0) {
-      reportNonTimeVarying <- dplyr::bind_rows(
-        reportNonTimeVarying,
-        reportNonTimeVarying2
-      )
+      reportNonTimeVarying <- dplyr::bind_rows(reportNonTimeVarying, reportNonTimeVarying2)
     }
 
     # Format the non-time-varying report if needed
@@ -511,42 +466,39 @@ getFeatureExtractionReportByTimeWindows <- function(
       reportNonTimeVarying <-
         dplyr::bind_rows(
           reportNonTimeVarying |>
-            dplyr::filter(continuous == 0) |>
+            dplyr::filter(.data$continuous == 0) |>
             dplyr::mutate(
-              report = formatCountPercent(count = sumValue, percent = averageValue)
+              report = formatCountPercent(
+                count = .data$sumValue,
+                percent = .data$averageValue
+              )
             ),
           reportNonTimeVarying |>
-            dplyr::filter(continuous == 1) |>
+            dplyr::filter(.data$continuous == 1) |>
             dplyr::mutate(
               report = formatDecimalWithComma(
-                number = averageValue,
+                number = .data$averageValue,
                 decimalPlaces = 1,
                 round = 1
               )
             )
         ) |>
-        dplyr::select(-continuous)
+        dplyr::select(-.data$continuous)
     } else {
       reportNonTimeVarying <- dplyr::tibble()
     }
   }
 
   # Combine time-varying and non-time-varying reports
-  report <- dplyr::bind_rows(
-    reportNonTimeVarying,
-    reportTimeVarying
-  )
+  report <- dplyr::bind_rows(reportNonTimeVarying, reportTimeVarying)
 
   # Process conceptId for custom covariates
-  if (all(
-    nrow(report) > 0,
-    "conceptId" %in% colnames(report)
-  )) {
+  if (all(nrow(report) > 0, "conceptId" %in% colnames(report))) {
     report <- report |>
       dplyr::mutate(conceptId = dplyr::if_else(
-        condition = (conceptId == 0),
-        true = (covariateId - analysisId) / 1000,
-        false = conceptId
+        condition = (.data$conceptId == 0),
+        true = (.data$covariateId - .data$analysisId) / 1000,
+        false = .data$conceptId
       ))
   }
 
@@ -566,18 +518,17 @@ getFeatureExtractionReportByTimeWindows <- function(
   if (!is.null(table1Specifications)) {
     table1Specifications <- table1Specifications |>
       dplyr::mutate(labelId = dplyr::row_number()) |>
-      dplyr::relocate(labelId)
+      dplyr::relocate(.data$labelId)
     reportTable1 <- c()
     for (i in (1:nrow(table1Specifications))) {
       reportTable1[[i]] <- table1Specifications[i, ] |>
-        dplyr::select(
-          labelId,
-          label
-        ) |>
-        tidyr::crossing(report |>
-          dplyr::filter(
-            covariateId %in% commaSeparaedStringToIntArray(table1Specifications[i, ]$covariateIds)
-          ))
+        dplyr::select(.data$labelId, .data$label) |>
+        tidyr::crossing(
+          report |>
+            dplyr::filter(
+              .data$covariateId %in% commaSeparatedStringToIntArray(table1Specifications[i, ]$covariateIds)
+            )
+        )
 
       if (nrow(reportTable1[[i]]) > 0) {
         reportTable1[[i]] <- dplyr::bind_rows(
@@ -587,24 +538,20 @@ getFeatureExtractionReportByTimeWindows <- function(
             dplyr::mutate(
               covariateId = 0,
               periodName = "",
-              covariateName = label
+              covariateName = .data$label
             ) |>
             dplyr::select(
-              labelId,
-              label,
-              covariateId,
-              timeId,
-              periodName,
-              covariateName
+              .data$labelId,
+              .data$label,
+              .data$covariateId,
+              .data$timeId,
+              .data$periodName,
+              .data$covariateName
             ) |>
             dplyr::mutate(source = 1)
         ) |>
-          dplyr::arrange(
-            labelId,
-            label,
-            source
-          ) |>
-          dplyr::select(-source)
+          dplyr::arrange(.data$labelId, .data$label, .data$source) |>
+          dplyr::select(-.data$source)
       }
     }
     report <- dplyr::bind_rows(reportTable1)
@@ -634,9 +581,9 @@ getFeatureExtractionReportByTimeWindows <- function(
   if (pivot) {
     report <- report |>
       tidyr::pivot_wider(
-        id_cols = idCols,
-        names_from = periodName,
-        values_from = report
+        id_cols = .data$idCols,
+        names_from = .data$periodName,
+        values_from = .data$report
       )
   }
 

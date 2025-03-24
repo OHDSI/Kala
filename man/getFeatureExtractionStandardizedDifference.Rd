@@ -41,21 +41,6 @@ iterates over each time window to calculate the standardized difference using
 \code{FeatureExtraction::computeStandardizedDifference}. Optionally, it also computes the standardized
 difference for non-time-varying covariates when \code{includeNonTimeVarying} is set to \code{TRUE}.
 }
-\details{
-The function performs the following steps:
-\enumerate{
-  \item It validates that at least one of \code{covariateData1Path} or \code{covariateData2Path} is provided.
-  \item It loads the covariate data for both cohorts using \code{FeatureExtraction::loadCovariateData}.
-  \item The time reference (\code{timeRef}) is extracted from the loaded covariate data and compared using
-        \code{compareTibbles}. If the two time references are not identical, an inner join on \code{timeId},
-        \code{startDay}, and \code{endDay} is performed to derive common time windows.
-  \item If a custom \code{timeRef} is provided, it is validated and joined with the derived time reference.
-  \item For each time window, the function reloads and filters the covariate data by the specific \code{timeId}
-        and \code{cohortDefinitionId}, then computes the standardized difference for that window.
-  \item If \code{includeNonTimeVarying} is \code{TRUE}, the function additionally computes the standardized difference
-        for non-time-varying covariates (where \code{timeId} is \code{NA}) and appends these results.
-}
-}
 \examples{
 \dontrun{
 # Compute standardized differences between two covariate data sets for cohorts 1 and 2

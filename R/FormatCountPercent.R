@@ -28,11 +28,6 @@
 #'   \code{"formattedCount (formattedPercent)"}.
 #'
 #' @details
-#' This function relies on two helper functions:
-#' \itemize{
-#'   \item \code{formatIntegerWithComma}: Formats a numeric count with commas as thousand separators.
-#'   \item \code{formatPercent}: Formats a numeric percentage to a string representation with a specified number of digits.
-#' }
 #' The function concatenates the outputs of these helpers with additional formatting.
 #'
 #' @examples
@@ -55,8 +50,10 @@ formatCountPercent <- function(count, percent, percentDigits = 1) {
 
 #' Format an Integer with Comma Separators
 #'
-#' This function formats a numeric value as an integer and inserts commas as thousand separators.
-#' It utilizes \code{formatC} with \code{format = "d"} and \code{big.mark = ","} to produce a human-readable string.
+#' This function formats a numeric value by first truncating any fractional part.
+#' If the input number is a whole number (i.e., it has no fractional part), the function
+#' inserts commas as thousand separators using \code{formatC} with \code{format = "d"} and \code{big.mark = ","}.
+#' For non-whole numbers, only the integer portion is returned as a character string without commas.
 #'
 #' @param number A numeric value to be formatted as an integer.
 #'
@@ -67,34 +64,16 @@ formatCountPercent <- function(count, percent, percentDigits = 1) {
 #' # [1] "1,234,567"
 #'
 formatIntegerWithComma <- function(number) {
-  return(formatC(number, format = "d", big.mark = ","))
+  # Truncate the number to its integer part:
+  truncated <- as.integer(number)
+  # Check which numbers are whole (no fractional part)
+  isWhole <- (number %% 1 == 0)
+  # For whole numbers, format with commas; for non-whole numbers, return as character without commas
+  result <- ifelse(isWhole, formatC(truncated, format = "d", big.mark = ","), as.character(truncated))
+  return(result)
 }
 
 
-#' Format a Number as a Percentage String
-#'
-#' This function converts a numeric value into a percentage string by multiplying the value by 100,
-#' formatting it with a specified number of digits, and appending a percent sign ("%").
-#'
-#' @param x A numeric value representing a proportion (e.g., 0.25 for 25%).
-#' @param digits An integer specifying the number of digits after the decimal point. Defaults to \code{2}.
-#' @param format A character string indicating the format to be used by \code{formatC}. Defaults to \code{"f"}.
-#' @param ... Additional arguments passed to \code{formatC} for further customization.
-#'
-#' @return A character string representing the formatted percentage value with a trailing percent sign.
-#'
-#' @details
-#' The function multiplies the input \code{x} by 100 to convert it to a percentage,
-#' formats the resulting number using \code{formatC} with the specified \code{digits} and \code{format},
-#' and finally appends a "%" sign to create a complete percentage string.
-#'
-#' @examples
-#' formatPercent(0.1234)
-#' # "12.34%"
-#'
-#' formatPercent(0.5, digits = 0)
-#' # "50%"
-#'
 formatPercent <- function(x,
                           digits = 2,
                           format = "f",

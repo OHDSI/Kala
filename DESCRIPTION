@@ -22,7 +22,11 @@ Imports:
 	FeatureExtraction,
   lifecycle,
   rlang,
-	SqlRender
+  ParallelLogger,
+  readr,
+  stringr,
+	SqlRender,
+	tidyr
 Suggests:
   knitr,
   testthat,

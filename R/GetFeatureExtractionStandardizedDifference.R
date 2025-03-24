@@ -39,20 +39,6 @@
 #'   standardized difference. If non-time-varying covariates are included, their standardized difference is appended
 #'   to the result.
 #'
-#' @details
-#' The function performs the following steps:
-#' \enumerate{
-#'   \item It validates that at least one of \code{covariateData1Path} or \code{covariateData2Path} is provided.
-#'   \item It loads the covariate data for both cohorts using \code{FeatureExtraction::loadCovariateData}.
-#'   \item The time reference (\code{timeRef}) is extracted from the loaded covariate data and compared using
-#'         \code{compareTibbles}. If the two time references are not identical, an inner join on \code{timeId},
-#'         \code{startDay}, and \code{endDay} is performed to derive common time windows.
-#'   \item If a custom \code{timeRef} is provided, it is validated and joined with the derived time reference.
-#'   \item For each time window, the function reloads and filters the covariate data by the specific \code{timeId}
-#'         and \code{cohortDefinitionId}, then computes the standardized difference for that window.
-#'   \item If \code{includeNonTimeVarying} is \code{TRUE}, the function additionally computes the standardized difference
-#'         for non-time-varying covariates (where \code{timeId} is \code{NA}) and appends these results.
-#' }
 #'
 #' @examples
 #' \dontrun{
@@ -132,11 +118,17 @@ getFeatureExtractionStandardizedDifference <-
 
       covariateData1 <- FeatureExtraction::loadCovariateData(file = covariateData1Path)
       covariateData1$covariates <- covariateData1$covariates |>
-        dplyr::filter(timeId == rowData$timeId, cohortDefinitionId == cohortId1)
+        dplyr::filter(
+          .data$timeId == rowData$timeId,
+          .data$cohortDefinitionId == cohortId1
+        )
 
       covariateData2 <- FeatureExtraction::loadCovariateData(file = covariateData2Path)
       covariateData2$covariates <- covariateData2$covariates |>
-        dplyr::filter(timeId == rowData$timeId, cohortDefinitionId == cohortId2)
+        dplyr::filter(
+          .data$timeId == rowData$timeId,
+          .data$cohortDefinitionId == cohortId2
+        )
 
       standardizedDifference[[i]] <- FeatureExtraction::computeStandardizedDifference(
         covariateData1 = covariateData1,
@@ -145,8 +137,13 @@ getFeatureExtractionStandardizedDifference <-
         cohortId2 = cohortId2
       ) |>
         tidyr::crossing(rowData |>
-          dplyr::select(startDay, endDay)) |>
-        dplyr::relocate(startDay, endDay, covariateId, covariateName)
+          dplyr::select(.data$startDay, .data$endDay)) |>
+        dplyr::relocate(
+          .data$startDay,
+          .data$endDay,
+          .data$covariateId,
+          .data$covariateName
+        )
     }
 
     standardizedDifference <- dplyr::bind_rows(standardizedDifference)
@@ -155,11 +152,17 @@ getFeatureExtractionStandardizedDifference <-
       message("working on non time varying")
       covariateData1 <- FeatureExtraction::loadCovariateData(file = covariateData1Path)
       covariateData1$covariates <- covariateData1$covariates |>
-        dplyr::filter(is.na(timeId), cohortDefinitionId == cohortId1)
+        dplyr::filter(
+          is.na(.data$timeId),
+          .data$cohortDefinitionId == cohortId1
+        )
 
       covariateData2 <- FeatureExtraction::loadCovariateData(file = covariateData2Path)
       covariateData2$covariates <- covariateData2$covariates |>
-        dplyr::filter(is.na(timeId), cohortDefinitionId == cohortId2)
+        dplyr::filter(
+          is.na(.data$timeId),
+          .data$cohortDefinitionId == cohortId2
+        )
 
       standardizedDifferenceNonTimeVarying <- FeatureExtraction::computeStandardizedDifference(
         covariateData1 = covariateData1,

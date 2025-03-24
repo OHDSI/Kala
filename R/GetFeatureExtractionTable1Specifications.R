@@ -143,7 +143,7 @@ getTable1SpecificationsFromCovariateData <-
     }
 
     analysisNames <- analysisRef |>
-      dplyr::select(analysisId, analysisName) |>
+      dplyr::select(.data$analysisId, .data$analysisName) |>
       dplyr::distinct()
 
     if (nrow(analysisNames) > 0) {
@@ -153,7 +153,7 @@ getTable1SpecificationsFromCovariateData <-
 
         covariateIds <- covariateRef |>
           dplyr::collect() |>
-          dplyr::filter(analysisId %in% analysisName$analysisId) |>
+          dplyr::filter(.data$analysisId %in% analysisName$analysisId) |>
           dplyr::select(.data$covariateId) |>
           dplyr::distinct() |>
           dplyr::collect() |>
