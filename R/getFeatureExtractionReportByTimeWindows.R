@@ -663,3 +663,560 @@ getFeatureExtractionReportByTimeWindows <- function(
   return(output)
 }
 
+
+#' @export
+getFeatureExtractionReportInParallel <-
+  function(cdmSources,
+           covariateDataPath,
+           startDays = NULL,
+           endDays = NULL,
+           includeNonTimeVarying = FALSE,
+           minAverageValue = 0.01,
+           includedCovariateIds = NULL,
+           excludedCovariateIds = NULL,
+           table1Specifications = NULL,
+           simple = TRUE,
+           cohortId,
+           covariateDataFileNamePattern =  paste0(cohortId, "$"),
+           cohortDefinitionSet,
+           databaseId = NULL,
+           cohortName = NULL,
+           reportName = NULL,
+           format = TRUE) {
+    sourceKeys <- cdmSources$sourceKey |> unique()
+    
+    covariateDataFiles <-
+      list.files(
+        path = covariateDataPath,
+        pattern = paste0("^", cohortId, "$"),
+        all.files = TRUE,
+        recursive = TRUE,
+        ignore.case = TRUE,
+        full.names = TRUE,
+        include.dirs = TRUE
+      )
+    covariateDataFiles <-
+      covariateDataFiles[stringr::str_detect(string = covariateDataFiles,
+                                             pattern = unique(sourceKeys) |> paste0(collapse = "|"))]
+    
+    covariateDataFiles <-
+      dplyr::tibble(filePath = covariateDataFiles,
+                    sourceKey = covariateDataFiles |> dirname() |> basename())
+    
+    reportRaw <- c()
+    reportFormatted <- c()
+    for (i in (1:length(sourceKeys))) {
+      sourceKey <- sourceKeys[[i]]
+      covariateDataFile <- covariateDataFiles |>
+        dplyr::filter(sourceKey == !!sourceKey)
+      if (nrow(covariateDataFile) == 1) {
+        covariateData <-
+          FeatureExtraction::loadCovariateData(file = covariateDataFile$filePath)
+        
+        if (!'covariates' %in% names(covariateData)) {
+          next()
+        }
+        
+        if (!'cohortDefinitionId' %in% colnames(covariateData$covariates)) {
+          next()
+        }
+        
+        if (is.null(table1Specifications)) {
+          table1Specifications <- OhdsiHelpers::getTable1SpecificationsFromCovariateData(covariateData)
+        }
+        
+        reportFe <-
+          getFeatureExtractionReportByTimeWindows(
+            covariateData = covariateData,
+            startDays = startDays,
+            endDays = endDays,
+            includeNonTimeVarying = includeNonTimeVarying,
+            minAverageValue = minAverageValue,
+            includedCovariateIds = includedCovariateIds,
+            excludedCovariateIds = excludedCovariateIds,
+            table1Specifications = table1Specifications,
+            cohortId = cohortId,
+            cohortDefinitionSet = cohortDefinitionSet,
+            databaseId = databaseId,
+            cohortName = cohortName,
+            reportName = reportName,
+            format = format,
+            pivot = FALSE
+          )
+        
+        if (!is.null(reportFe$raw)) {
+          if (nrow(reportFe$raw) > 0) {
+            databaseId <- cdmSources |>
+              dplyr::filter(sourceKey == !!sourceKey) |>
+              dplyr::pull(database)
+            reportRaw[[i]] <- reportFe$raw |>
+              dplyr::mutate(databaseId = databaseId)
+            reportFormatted[[i]] <- reportFe$formatted |>
+              dplyr::mutate(databaseId = databaseId)
+          }
+        }
+      }
+    }
+    
+    if (!exists("reportFe")) {
+      message("Cannot find covariate data file")
+      return(NULL)
+    }
+    
+    if (is.null(reportFe$raw)) {
+      return(NULL)
+    }
+    
+    reportFormatted <- dplyr::bind_rows(reportFormatted) |>
+      dplyr::mutate(Characteristic = paste0("  ", stringr::str_remove(covariateName, ".*: ")))
+    
+    idCols <- setdiff(colnames(reportFormatted),
+                      c("sumValue",
+                        "averageValue",
+                        "report",
+                        "databaseId"))
+    
+    if (simple) {
+      idCols <- intersect(idCols,
+                          c(
+                            "labelId",
+                            "label",
+                            "covariateId",
+                            "Characteristic",
+                            "periodName"
+                          ))
+    }
+    
+    reportFormatted <- reportFormatted |>
+      tidyr::pivot_wider(
+        id_cols = idCols,
+        names_from = "databaseId",
+        values_from = "report",
+        values_fill = "0"
+      )
+    
+    if (!is.null(table1Specifications)) {
+      reportFormatted <- reportFormatted |>
+        dplyr::arrange(labelId,
+                       label,
+                       periodName,
+                       covariateId,
+                       Characteristic) |>
+        dplyr::filter(!is.na(labelId))
+    } else {
+      reportFormatted <- reportFormatted |>
+        dplyr::arrange(dplyr::desc(setdiff(colnames(reportFormatted),
+                                           idCols)[[1]])) |>
+        dplyr::filter(!is.na(covariateId))
+    }
+    
+    output <- c()
+    output$raw <- dplyr::bind_rows(reportRaw)
+    output$formatted <- reportFormatted
+    return(output)
+  }
+
+
+
+#' @export
+getFeatureExtractionReportCommonSequentialTimePeriods <-
+  function() {
+    # covariateData$timeRef |>
+    #   dplyr::collect() |>
+    #   dplyr::filter(endDay == -1) |>
+    #   dplyr::filter(startDay %% 2 != 0) |>
+    #   dplyr::filter(startDay > -400) |>
+    #   dplyr::filter(startDay != -365)
+    #
+    # covariateData$timeRef |>
+    #   dplyr::collect() |>
+    #   dplyr::filter(startDay == 1) |>
+    #   dplyr::filter(endDay %% 2 != 0) |>
+    #   dplyr::filter(endDay != 365) |>
+    #   dplyr::filter(endDay < 400)
+    
+    
+    priorMonthlyPeriods <- dplyr::tibble(
+      timeId = c(15, 21, 23, 25, 27, 29, 31, 33, 36, 38, 41, 44, 47),
+      startDay = c(
+        -391,-361,-331,-301,-271,-241,-211,-181,-151,-121,-91,-61,-31
+      ),
+      endDay = c(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
+    )
+    
+    postMonthlyPeriods <- dplyr::tibble(
+      timeId = c(58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70),
+      startDay = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+      endDay = c(1, 31, 61, 91, 121, 151, 181, 211, 241, 271, 301, 331, 361)
+    )
+    
+    onDayOf <- dplyr::tibble(timeId = 53,
+                             startDay = 0,
+                             endDay = 0)
+    
+    timePeriods <- dplyr::bind_rows(priorMonthlyPeriods,
+                                    postMonthlyPeriods,
+                                    onDayOf) |>
+      dplyr::arrange(timeId)
+    
+    return(timePeriods)
+    
+  }
+
+
+
+#' @export
+getFeatureExtractionReportNonTimeVarying <-
+  function(cdmSources,
+           covariateDataPath,
+           cohortId,
+           cohortDefinitionSet,
+           remove = 'Visit Count|Chads 2 Vasc|Demographics Index Month|Demographics Post Observation Time|Visit Concept Count|Chads 2|Demographics Prior Observation Time|Dcsi|Demographics Time In Cohort|Demographics Index Year Month') {
+    output <-
+      getFeatureExtractionReportInParallel(
+        cdmSources = cdmSources,
+        covariateDataPath = covariateDataPath,
+        includeNonTimeVarying = TRUE,
+        minAverageValue = 0.01,
+        includedCovariateIds = NULL,
+        excludedCovariateIds = NULL,
+        table1Specifications = NULL,
+        simple = TRUE,
+        cohortId = cohortId,
+        covariateDataFileNamePattern =  paste0(cohortId, "$"),
+        cohortDefinitionSet = cohortDefinitionSet,
+        databaseId = NULL,
+        cohortName = NULL,
+        reportName = NULL,
+        format = TRUE
+      )
+    
+    if (is.null(output)) {
+      return(NULL)
+    }
+    
+    if (!is.null(remove)) {
+      writeLines(paste0("removing from formatted report",
+                        remove))
+      output$formattedFull <- output$formatted
+      output$formatted <- output$formatted |>
+        dplyr::filter(stringr::str_detect(
+          string = label,
+          pattern = remove,
+          negate = TRUE
+        ))
+    }
+    
+    return(output)
+  }
+
+#' @export
+getFeatureExtractionStandardizedDifference <-
+  function(covariateData1Path = NULL,
+           covariateData2Path = NULL,
+           cohortId1,
+           cohortId2,
+           includeNonTimeVarying = TRUE,
+           timeRef = NULL) {
+    if (all(is.null(timeRef),!includeNonTimeVarying)) {
+      message("includeNonTimeVarying is FASLE and timeRef is NULL. no results.")
+      return(NULL)
+    }
+    
+    if (all(is.null(covariateData1Path),
+            is.null(covariateData2Path))) {
+      stop("covariateData1/2 and path are all NULL")
+    }
+    
+    covariateData1 <-
+      FeatureExtraction::loadCovariateData(file = covariateData1Path)
+    
+    covariateData2 <-
+      FeatureExtraction::loadCovariateData(file = covariateData2Path)
+    
+    timeRef1 <- covariateData1$timeRef |> dplyr::collect()
+    timeRef2 <- covariateData2$timeRef |> dplyr::collect()
+    
+    compared <-
+      OhdsiHelpers::compareTibbles(tibble1 = timeRef1, tibble2 = timeRef2)
+    
+    if (!compared$identical) {
+      message("covariate data is not identical")
+      timeRefFromCovariateData <- timeRef1 |>
+        dplyr::inner_join(timeRef2,
+                          by = c("timeId",
+                                 "startDay",
+                                 "endDay"))
+    } else {
+      timeRefFromCovariateData <- timeRef1
+    }
+    
+    standardizedDifference <- c()
+    
+    if (!is.null(timeRef)) {
+      checkmate::assertDataFrame(timeRef)
+      if (!'startDay' %in% colnames(timeRef)) {
+        stop("please check timeRef")
+      }
+      if (!'endDay' %in% colnames(timeRef)) {
+        stop("please check timeRef")
+      }
+      timeRef <- timeRefFromCovariateData |>
+        dplyr::inner_join(
+          timeRef |>
+            dplyr::select(startDay,
+                          endDay) |>
+            dplyr::distinct(),
+          by = c("startDay", "endDay")
+        )
+    } else {
+      timeRef <- timeRefFromCovariateData
+    }
+    
+    if (nrow(timeRef) == 0) {
+      message("no valid time windows")
+    }
+    
+    for (i in (1:nrow(timeRef))) {
+      rowData <- timeRef[i,]
+      
+      message(paste0("working on ", rowData$startDay, " to ", rowData$endDay))
+      covariateData1 <-
+        FeatureExtraction::loadCovariateData(file = covariateData1Path)
+      covariateData1$covariates <- covariateData1$covariates |>
+        dplyr::filter(timeId == rowData$timeId,
+                      cohortDefinitionId == cohortId1)
+      
+      covariateData2 <-
+        FeatureExtraction::loadCovariateData(file = covariateData2Path)
+      covariateData2$covariates <- covariateData2$covariates |>
+        dplyr::filter(timeId == rowData$timeId,
+                      cohortDefinitionId == cohortId2)
+      
+      standardizedDifference[[i]] <-
+        FeatureExtraction::computeStandardizedDifference(
+          covariateData1 = covariateData1,
+          covariateData2 = covariateData2,
+          cohortId1 = cohortId1,
+          cohortId2 = cohortId2
+        ) |>
+        tidyr::crossing(rowData |>
+                          dplyr::select(startDay,
+                                        endDay)) |>
+        dplyr::relocate(startDay,
+                        endDay,
+                        covariateId,
+                        covariateName)
+    }
+    
+    standardizedDifference <-
+      dplyr::bind_rows(standardizedDifference)
+    
+    if (includeNonTimeVarying) {
+      #non time varying
+      message("working on non time varying")
+      covariateData1 <-
+        FeatureExtraction::loadCovariateData(file = covariateData1Path)
+      covariateData1$covariates <- covariateData1$covariates |>
+        dplyr::filter(is.na(timeId),
+                      cohortDefinitionId == cohortId1)
+      
+      covariateData2 <-
+        FeatureExtraction::loadCovariateData(file = covariateData2Path)
+      covariateData2$covariates <- covariateData2$covariates |>
+        dplyr::filter(is.na(timeId),
+                      cohortDefinitionId == cohortId2)
+      standardizedDifferenceNonTimeVarying <-
+        FeatureExtraction::computeStandardizedDifference(
+          covariateData1 = covariateData1,
+          covariateData2 = covariateData2,
+          cohortId1 = cohortId1,
+          cohortId2 = cohortId2
+        )
+      
+      standardizedDifference <-
+        dplyr::bind_rows(standardizedDifference,
+                         standardizedDifferenceNonTimeVarying)
+    }
+    return(standardizedDifference)
+  }
+
+
+#' @export
+getFeatureExtractionStandardizedDifferenceInParallel <-
+  function(cdmSources,
+           databaseId,
+           cohortId1,
+           cohortId2,
+           covariateDataPath,
+           includeNonTimeVarying = TRUE,
+           timeRef = NULL) {
+    
+    if (all(is.null(timeRef),
+            !includeNonTimeVarying)) {
+      message("includeNonTimeVarying is FASLE and timeRef is NULL. no results.")
+      return(NULL)
+    }
+    sourceKeys <- cdmSources$sourceKey |> unique()
+    
+    covariateDataFilesCohort1 <-
+      list.files(
+        path = covariateDataPath,
+        pattern = paste0("^", cohortId1, "$"),
+        all.files = TRUE,
+        recursive = TRUE,
+        ignore.case = TRUE,
+        full.names = TRUE,
+        include.dirs = TRUE
+      )
+    covariateDataFilesCohort2 <-
+      list.files(
+        path = covariateDataPath,
+        pattern = paste0("^", cohortId2, "$"),
+        all.files = TRUE,
+        recursive = TRUE,
+        ignore.case = TRUE,
+        full.names = TRUE,
+        include.dirs = TRUE
+      )
+    
+    covariateDataFilesCohort1 <-
+      covariateDataFilesCohort1[stringr::str_detect(string = covariateDataFilesCohort1,
+                                                    pattern = unique(sourceKeys) |>
+                                                      paste0(collapse = "|"))]
+    
+    covariateDataFilesCohort2 <-
+      covariateDataFilesCohort2[stringr::str_detect(string = covariateDataFilesCohort2,
+                                                    pattern = unique(sourceKeys) |>
+                                                      paste0(collapse = "|"))]
+    
+    covariateDataFiles1 <-
+      dplyr::tibble(filePath1 = covariateDataFilesCohort1,
+                    sourceKey = covariateDataFilesCohort1 |> dirname() |> basename())
+    
+    covariateDataFiles2 <-
+      dplyr::tibble(filePath2 = covariateDataFilesCohort2,
+                    sourceKey = covariateDataFilesCohort2 |> dirname() |> basename())
+    
+    covariateDataFiles <- covariateDataFiles1 |>
+      dplyr::inner_join(covariateDataFiles2)
+    
+    if (nrow(covariateDataFiles) == 0) {
+      message("covariate data files not found. no results.")
+      return(NULL)
+    }
+    
+    standardizedDifferenceRaw <- c()
+    for (i in (1:nrow(covariateDataFiles))) {
+      rowData <- covariateDataFiles[i,]
+      
+      standardizedDifferenceRaw[[i]] <-
+        getFeatureExtractionStandardizedDifference(
+          covariateData1Path = rowData$filePath1,
+          covariateData2Path = rowData$filePath2,
+          cohortId1 = cohortId1,
+          cohortId2 = cohortId2,
+          includeNonTimeVarying = includeNonTimeVarying,
+          timeRef = timeRef
+        ) |>
+        dplyr::mutate(
+          database = cdmSources |>
+            dplyr::filter(sourceKey == rowData$sourceKey) |>
+            dplyr::pull(database),
+          sourceKey = rowData$sourceKey
+        )
+    }
+    
+    covariateData <-
+      FeatureExtraction::loadCovariateData(rowData$filePath1)
+    
+    standardizedDifferenceRaw <-
+      dplyr::bind_rows(standardizedDifferenceRaw) |>
+      dplyr::inner_join(
+        covariateData$covariateRef |>
+          dplyr::select(covariateId,
+                        analysisId,
+                        conceptId) |>
+          dplyr::distinct() |>
+          dplyr::collect(),
+        by = "covariateId"
+      ) |>
+      dplyr::mutate(ratio = mean1 / mean2,
+                    difference = mean1 - mean2,
+                    periodName = "fixd")
+    
+    if ('startDay' %in% colnames(standardizedDifferenceRaw)) {
+      standardizedDifferenceRaw <- standardizedDifferenceRaw |>
+        dplyr::mutate(periodName = paste0("d",
+                                          startDay |> as.integer(),
+                                          "d",
+                                          endDay |> as.integer()))
+    }
+    
+    output <- c()
+    output$raw <- standardizedDifferenceRaw
+    
+    table1Specifications <-
+      OhdsiHelpers::getTable1SpecificationsFromCovariateData(covariateData = covariateData)
+    
+    if (!is.null(table1Specifications)) {
+      table1Specifications <- table1Specifications |>
+        dplyr::mutate(labelId = dplyr::row_number()) |>
+        dplyr::relocate(labelId)
+      reportTable1 <- c()
+      for (i in (1:nrow(table1Specifications))) {
+        reportTable1[[i]] <- table1Specifications[i, ] |>
+          dplyr::select(labelId,
+                        label) |>
+          tidyr::crossing(output$raw |>
+                            dplyr::filter(
+                              covariateId %in%
+                                commaSeparaedStringToIntArray(
+                                  table1Specifications[i, ]$covariateIds)
+                            )) |>
+          dplyr::mutate(
+            mean1 = round(x = mean1, digits = 2),
+            mean2 = round(x = mean2, digits = 2),
+            sd1 = round(x = sd1, digits = 2),
+            sd2 = round(x = sd2, digits = 2),
+            sd = round(x = sd, digits = 2),
+            stdDiff = round(x = stdDiff, digits = 4),
+            ratio = round(x = ratio, digits = 3),
+            difference = round(x = difference, digits = 2),
+            absDifference = abs(difference)
+          )
+        
+        if (nrow(reportTable1[[i]]) > 0) {
+          reportTable1[[i]] <- dplyr::bind_rows(
+            reportTable1[[i]] |>
+              dplyr::mutate(source = 2,
+                            covariateName = paste0("    ", 
+                                                   stringr::str_remove(covariateName, 
+                                                                       ".*: "))
+              ), 
+            table1Specifications[i,] |>
+              dplyr::mutate(
+                covariateId = 0,
+                periodName = "",
+                covariateName = label
+              ) |>
+              dplyr::select(labelId,
+                            label,
+                            covariateId,
+                            periodName,
+                            covariateName) |>
+              dplyr::mutate(source = 1)
+          ) |>
+            dplyr::arrange(labelId,
+                           label,
+                           source) |>
+            dplyr::select(-source)
+        }
+      }
+      report <- dplyr::bind_rows(reportTable1)
+    }
+    
+    output$report <- report
+    
+    return(output)
+  }
