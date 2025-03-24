@@ -19,8 +19,18 @@ Depends:
 Imports:
   checkmate,
   dplyr,
+	fable,
+  fabletools,
+  feasts,
 	FeatureExtraction,
+  ggplot2,
   lifecycle,
+  lubridate,
+  ParallelLogger,
+  purrr,
+  readr,
+  RJSONIO,
+  stringr,
   rlang,
 	SqlRender
 Suggests:
