@@ -4,9 +4,9 @@
 \name{Kala-package}
 \alias{Kala}
 \alias{Kala-package}
-\title{Kala: Temporal relationships between cohort and its features}
+\title{Kala: Tools for Exploring Temporal Relationships Between Cohorts and Their Features}
 \description{
-Kala studies temporal relationship between a cohort and its features
+The 'Kala' package provides a streamlined workflow to generate and explore temporal features for cohorts in the OMOP Common Data Model. By leveraging 'FeatureExtraction' and its 'temporalCovariateSettings', 'Kala' produces both tabular and graphical summaries of features across configurable time windows. These outputs allow easy comparisons and time-series analyses for identifying patterns, trends, or changes in clinical features over time.
 }
 \seealso{
 Useful links:

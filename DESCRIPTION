@@ -1,19 +1,32 @@
 Package: Kala
 Type: Package
-Title: Temporal relationships between cohort and its features
+Title: Tools for Exploring Temporal Relationships Between Cohorts and Their Features
 Version: 0.0.0
 Date: 2025-03-24
 Authors@R: c(
     person("Gowtham", "Rao", email = "gowthamrao@gmail.com", role = c("aut", "cre")),
     person("Observational Health Data Science and Informatics", role = c("cph"))
   )
-Description: Kala studies temporal relationship between a cohort and its features
+Description: The 'Kala' package provides a streamlined workflow to generate 
+  and explore temporal features for cohorts in the OMOP Common Data Model. By 
+  leveraging 'FeatureExtraction' and its 'temporalCovariateSettings', 'Kala' 
+  produces both tabular and graphical summaries of features across configurable 
+  time windows. These outputs allow easy comparisons and time-series analyses 
+  for identifying patterns, trends, or changes in clinical features over time.
 Depends:
-	DatabaseConnector
+	DatabaseConnector (>= 5.0.0),
+	R (>= 4.1.0)
 Imports:
-	SqlRender,
-	FeatureExtraction
+  checkmate,
+  dplyr,
+	FeatureExtraction,
+  lifecycle,
+  rlang,
+	SqlRender
 Suggests:
+  knitr,
+  testthat,
+  withr
 Remotes:
 License: Apache License
 VignetteBuilder: knitr

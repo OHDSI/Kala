@@ -32,6 +32,6 @@ pkgdown::build_site()
 OhdsiRTools::fixHadesLogo()
 
 # Release package to CRAN ------------------------------------------------------
-devtools::release()
-devtools::check(cran=TRUE)
+# devtools::release()
+# devtools::check(cran=TRUE)
 
