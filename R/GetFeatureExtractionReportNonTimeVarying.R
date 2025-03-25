@@ -58,7 +58,7 @@ getFeatureExtractionReportNonTimeVarying <-
            cohortDefinitionSet,
            remove = "Visit Count|Chads 2 Vasc|Demographics Index Month|Demographics Post Observation Time|Visit Concept Count|Chads 2|Demographics Prior Observation Time|Dcsi|Demographics Time In Cohort|Demographics Index Year Month") {
     output <-
-      getFeatureExtractionReport(
+      getFeatureExtractionReportByTimeWindows(
         covariateDataPath = covariateDataPath,
         includeNonTimeVarying = TRUE,
         minAverageValue = 0.01,
@@ -73,11 +73,11 @@ getFeatureExtractionReportNonTimeVarying <-
         reportName = NULL,
         format = TRUE
       )
-    
+
     if (is.null(output)) {
       return(NULL)
     }
-    
+
     if (!is.null(remove)) {
       writeLines(paste0("removing from formatted report", remove))
       output$formattedFull <- output$formatted
@@ -88,6 +88,6 @@ getFeatureExtractionReportNonTimeVarying <-
           negate = TRUE
         ))
     }
-    
+
     return(output)
   }

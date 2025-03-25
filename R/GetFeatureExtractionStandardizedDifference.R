@@ -65,19 +65,19 @@ getFeatureExtractionStandardizedDifference <-
       message("includeNonTimeVarying is FALSE and timeRef is NULL. no results.")
       return(NULL)
     }
-    
+
     if (all(is.null(covariateData1Path), is.null(covariateData2Path))) {
       stop("covariateData1/2 and path are all NULL")
     }
-    
+
     covariateData1 <- FeatureExtraction::loadCovariateData(file = covariateData1Path)
     covariateData2 <- FeatureExtraction::loadCovariateData(file = covariateData2Path)
-    
+
     timeRef1 <- covariateData1$timeRef |> dplyr::collect()
     timeRef2 <- covariateData2$timeRef |> dplyr::collect()
-    
+
     compared <- compareTibbles(tibble1 = timeRef1, tibble2 = timeRef2)
-    
+
     if (!compared$identical) {
       message("covariate data is not identical")
       timeRefFromCovariateData <- timeRef1 |>
@@ -85,9 +85,9 @@ getFeatureExtractionStandardizedDifference <-
     } else {
       timeRefFromCovariateData <- timeRef1
     }
-    
+
     standardizedDifference <- c()
-    
+
     if (!is.null(timeRef)) {
       checkmate::assertDataFrame(timeRef)
       if (!"startDay" %in% colnames(timeRef)) {
@@ -106,26 +106,30 @@ getFeatureExtractionStandardizedDifference <-
     } else {
       timeRef <- timeRefFromCovariateData
     }
-    
+
     if (nrow(timeRef) == 0) {
       message("no valid time windows")
     }
-    
+
     for (i in (1:nrow(timeRef))) {
       rowData <- timeRef[i, ]
-      
+
       message(paste0("working on ", rowData$startDay, " to ", rowData$endDay))
-      
+
       covariateData1 <- FeatureExtraction::loadCovariateData(file = covariateData1Path)
       covariateData1$covariates <- covariateData1$covariates |>
-        dplyr::filter(.data$timeId == rowData$timeId,
-                      .data$cohortDefinitionId == cohortId1)
-      
+        dplyr::filter(
+          .data$timeId == rowData$timeId,
+          .data$cohortDefinitionId == cohortId1
+        )
+
       covariateData2 <- FeatureExtraction::loadCovariateData(file = covariateData2Path)
       covariateData2$covariates <- covariateData2$covariates |>
-        dplyr::filter(.data$timeId == rowData$timeId,
-                      .data$cohortDefinitionId == cohortId2)
-      
+        dplyr::filter(
+          .data$timeId == rowData$timeId,
+          .data$cohortDefinitionId == cohortId2
+        )
+
       standardizedDifference[[i]] <- FeatureExtraction::computeStandardizedDifference(
         covariateData1 = covariateData1,
         covariateData2 = covariateData2,
@@ -133,37 +137,45 @@ getFeatureExtractionStandardizedDifference <-
         cohortId2 = cohortId2
       ) |>
         tidyr::crossing(rowData |>
-                          dplyr::select(.data$startDay, .data$endDay)) |>
-        dplyr::relocate(.data$startDay,
-                        .data$endDay,
-                        .data$covariateId,
-                        .data$covariateName)
+          dplyr::select(.data$startDay, .data$endDay)) |>
+        dplyr::relocate(
+          .data$startDay,
+          .data$endDay,
+          .data$covariateId,
+          .data$covariateName
+        )
     }
-    
+
     standardizedDifference <- dplyr::bind_rows(standardizedDifference)
-    
+
     if (includeNonTimeVarying) {
       message("working on non time varying")
       covariateData1 <- FeatureExtraction::loadCovariateData(file = covariateData1Path)
       covariateData1$covariates <- covariateData1$covariates |>
-        dplyr::filter(is.na(.data$timeId),
-                      .data$cohortDefinitionId == cohortId1)
-      
+        dplyr::filter(
+          is.na(.data$timeId),
+          .data$cohortDefinitionId == cohortId1
+        )
+
       covariateData2 <- FeatureExtraction::loadCovariateData(file = covariateData2Path)
       covariateData2$covariates <- covariateData2$covariates |>
-        dplyr::filter(is.na(.data$timeId),
-                      .data$cohortDefinitionId == cohortId2)
-      
+        dplyr::filter(
+          is.na(.data$timeId),
+          .data$cohortDefinitionId == cohortId2
+        )
+
       standardizedDifferenceNonTimeVarying <- FeatureExtraction::computeStandardizedDifference(
         covariateData1 = covariateData1,
         covariateData2 = covariateData2,
         cohortId1 = cohortId1,
         cohortId2 = cohortId2
       )
-      
-      standardizedDifference <- dplyr::bind_rows(standardizedDifference,
-                                                 standardizedDifferenceNonTimeVarying)
+
+      standardizedDifference <- dplyr::bind_rows(
+        standardizedDifference,
+        standardizedDifferenceNonTimeVarying
+      )
     }
-    
+
     return(standardizedDifference)
   }
