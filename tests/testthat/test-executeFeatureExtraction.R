@@ -11,7 +11,7 @@ test_that("Default feature extraction run", {
     cohortName = c("Celecoxib")
   )
 
-  defaultCovariates <- Kala::getFeatureExtractionDefaultTemporalCovariateSettings()
+  defaultCovariates <- getFeatureExtractionDefaultTemporalCovariateSettings()
 
   executeFeatureExtraction(
     connectionDetails = eunomiaConnectionDetails,
@@ -66,7 +66,7 @@ test_that("Row_id == TRUE feature extraction run", {
     cohortName = c("Celecoxib", "NSAIDS")
   )
 
-  defaultCovariates <- Kala::getFeatureExtractionDefaultTemporalCovariateSettings()
+  defaultCovariates <- getFeatureExtractionDefaultTemporalCovariateSettings()
 
   executeFeatureExtraction(
     connectionDetails = eunomiaConnectionDetails,
@@ -111,4 +111,168 @@ test_that("Row_id == TRUE feature extraction run", {
   stopifnot(ncol(coh1_cc) == 13)
 
   expect_equal(colnames(coh1_c), c("cohortDefinitionId", "covariateId", "timeId", "sumValue", "averageValue"))
+})
+
+
+
+
+test_that("No directory - to get better test coverage", {
+  temp_dir <- tempfile()
+  unlink(temp_dir)
+
+  covariateCohortDefinitionSet <- dplyr::tibble(
+    cohortId = c(1),
+    cohortName = c("Celecoxib")
+  )
+
+  defaultCovariates <- getFeatureExtractionDefaultTemporalCovariateSettings()
+
+  executeFeatureExtraction(
+    connectionDetails = eunomiaConnectionDetails,
+    cdmDatabaseSchema = "main",
+    cohortDatabaseSchema = "main",
+    cohortIds = c(1),
+    cohortTable = "cohort",
+    outputFolder = temp_dir,
+    covariateSettings = defaultCovariates,
+    covariateCohortDefinitionSet = covariateCohortDefinitionSet
+  )
+})
+
+
+
+test_that("aggregated FALSE and more than one cohort id", {
+  temp_dir <- tempdir()
+
+  covariateCohortDefinitionSet <- dplyr::tibble(
+    cohortId = c(1),
+    cohortName = c("Celecoxib")
+  )
+
+  defaultCovariates <- getFeatureExtractionDefaultTemporalCovariateSettings()
+
+  testthat::expect_error(
+    executeFeatureExtraction(
+      connectionDetails = eunomiaConnectionDetails,
+      cdmDatabaseSchema = "main",
+      cohortDatabaseSchema = "main",
+      cohortIds = c(1, 2, 3),
+      cohortTable = "cohort",
+      outputFolder = temp_dir,
+      covariateSettings = defaultCovariates,
+      covariateCohortDefinitionSet = covariateCohortDefinitionSet,
+      aggregated = FALSE
+    )
+  )
+})
+
+
+
+
+test_that("No timewindows - to get better test coverage", {
+  temp_dir <- tempfile()
+  unlink(temp_dir)
+
+  covariateCohortDefinitionSet <- dplyr::tibble(
+    cohortId = c(1),
+    cohortName = c("Celecoxib")
+  )
+
+  defaultCovariates <- getFeatureExtractionDefaultTemporalCovariateSettings()
+
+  executeFeatureExtraction(
+    connectionDetails = eunomiaConnectionDetails,
+    cdmDatabaseSchema = "main",
+    cohortDatabaseSchema = "main",
+    cohortIds = c(1),
+    cohortTable = "cohort",
+    outputFolder = temp_dir,
+    covariateSettings = NULL,
+    covariateCohortDefinitionSet = covariateCohortDefinitionSet,
+    addCohortBasedTemporalCovariateSettings = FALSE
+  )
+})
+
+
+
+test_that("no covariateCohortDefinitionSet", {
+  temp_dir <- tempdir()
+
+  covariateCohortDefinitionSet <- dplyr::tibble(
+    cohortId = c(1),
+    cohortName = c("Celecoxib")
+  )
+
+  defaultCovariates <- getFeatureExtractionDefaultTemporalCovariateSettings()
+
+  testthat::expect_error(
+    executeFeatureExtraction(
+      connectionDetails = eunomiaConnectionDetails,
+      cdmDatabaseSchema = "main",
+      cohortDatabaseSchema = "main",
+      cohortIds = c(1, 2, 3),
+      cohortTable = "cohort",
+      outputFolder = temp_dir,
+      covariateSettings = defaultCovariates,
+      covariateCohortDefinitionSet = NULL,
+      addCohortBasedTemporalCovariateSettings = TRUE
+    )
+  )
+})
+
+
+
+
+test_that("no covariateCohortTable", {
+  temp_dir <- tempdir()
+
+  covariateCohortDefinitionSet <- dplyr::tibble(
+    cohortId = c(1),
+    cohortName = c("Celecoxib")
+  )
+
+  defaultCovariates <- getFeatureExtractionDefaultTemporalCovariateSettings()
+
+  testthat::expect_error(
+    executeFeatureExtraction(
+      connectionDetails = eunomiaConnectionDetails,
+      cdmDatabaseSchema = "main",
+      cohortDatabaseSchema = "main",
+      cohortIds = c(1, 2, 3),
+      cohortTable = "cohort",
+      outputFolder = temp_dir,
+      covariateSettings = covariateCohortDefinitionSet,
+      covariateCohortDefinitionSet = NULL,
+      addCohortBasedTemporalCovariateSettings = TRUE,
+      covariateCohortTable = NULL
+    )
+  )
+})
+
+
+
+test_that("no cohortCovariateAnalysisId", {
+  temp_dir <- tempdir()
+
+  covariateCohortDefinitionSet <- dplyr::tibble(
+    cohortId = c(1),
+    cohortName = c("Celecoxib")
+  )
+
+  defaultCovariates <- getFeatureExtractionDefaultTemporalCovariateSettings()
+
+  testthat::expect_error(
+    executeFeatureExtraction(
+      connectionDetails = eunomiaConnectionDetails,
+      cdmDatabaseSchema = "main",
+      cohortDatabaseSchema = "main",
+      cohortIds = c(1, 2, 3),
+      cohortTable = "cohort",
+      outputFolder = temp_dir,
+      covariateSettings = covariateCohortDefinitionSet,
+      covariateCohortDefinitionSet = NULL,
+      addCohortBasedTemporalCovariateSettings = TRUE,
+      cohortCovariateAnalysisId = NULL
+    )
+  )
 })

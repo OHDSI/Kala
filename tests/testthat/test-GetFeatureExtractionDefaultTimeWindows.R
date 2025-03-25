@@ -13,7 +13,7 @@ test_that("Non-cumulative", {
     windowType = c(NA, "30 day prior not including day 0", "last 30 days not including day 0", "last 60 days not including day 0", "last 90 days not including day 0", "last 120 days not including day 0", "31-60 days after", "61-90 days after", "91-120 days after", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of 30-day intervals after", "sequence of yearly intervals prior", "sequence of yearly intervals prior", "sequence of yearly intervals prior", "sequence of yearly intervals prior", "sequence of yearly intervals prior", "sequence of yearly intervals prior", "sequence of yearly intervals prior", "sequence of yearly intervals prior", "sequence of yearly intervals prior", "sequence of yearly intervals prior", "sequence of yearly intervals prior", "sequence of yearly intervals after", "sequence of yearly intervals after", "sequence of yearly intervals after", "sequence of yearly intervals after", "sequence of yearly intervals after", "sequence of yearly intervals after", "sequence of yearly intervals after", "sequence of yearly intervals after", "sequence of yearly intervals after", "sequence of yearly intervals after", "sequence of yearly intervals after")
   )
 
-  result <- Kala:::getFeatureExtractionDefaultTimeWindows(cumulative)
+  result <- Kala::getFeatureExtractionDefaultTimeWindows(cumulative)
   expect_equal(result, expected)
 })
 
@@ -27,7 +27,7 @@ test_that("Cumulative", {
     windowType = c(NA, "long term prior", "medium term prior", "short term prior", "index date only", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence")
   )
 
-  result <- Kala:::getFeatureExtractionDefaultTimeWindows(cumulative)
+  result <- Kala::getFeatureExtractionDefaultTimeWindows(cumulative)
   expect_equal(result, expected)
 })
 
@@ -42,7 +42,7 @@ test_that("Period Types", {
     windowType = c("index date only", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence")
   )
 
-  result <- Kala:::getFeatureExtractionDefaultTimeWindows(cumulative, periodTypes)
+  result <- Kala::getFeatureExtractionDefaultTimeWindows(cumulative, periodTypes)
   expect_equal(result, expected)
 })
 
@@ -56,6 +56,6 @@ test_that("Selected Cumulative", {
     windowType = c("anytime prior", "long term prior", "medium term prior", "short term prior", "index date only", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals after", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 30-day intervals prior", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of 1's matching length of above sequence", "sequence of yearly intervals after")
   )
 
-  result <- Kala:::getFeatureExtractionDefaultTimeWindows(selectedcumulative = selectedCumulative)
+  result <- Kala::getFeatureExtractionDefaultTimeWindows(selectedcumulative = selectedCumulative)
   expect_equal(result, expected)
 })

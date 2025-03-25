@@ -10,7 +10,7 @@ test_that("Identical tibbles with different column and row orders", {
   tib1 <- tibble(x = c(1, 2, 3), y = c("a", "b", "c"))
   tib2 <- tibble(y = c("c", "a", "b"), x = c(3, 1, 2))
 
-  result <- Kala:::compareTibbles(tib1, tib2)
+  result <- Kala::compareTibbles(tib1, tib2)
 
   expect_true(result$identical)
   expect_equal(result$additionalColumnsInFirst, character(0))
@@ -22,7 +22,7 @@ test_that("Tibbles with different columns", {
   tib1 <- tibble(x = c(1, 2, 3), y = c("a", "b", "c"))
   tib2 <- tibble(x = c(1, 2, 3), z = c("a", "b", "c"))
 
-  result <- Kala:::compareTibbles(tib1, tib2)
+  result <- Kala::compareTibbles(tib1, tib2)
 
   expect_false(result$identical)
   expect_equal(result$additionalColumnsInFirst, "y")
@@ -34,7 +34,7 @@ test_that("Tibbles with same columns but different number of rows", {
   tib1 <- tibble(x = c(1, 2, 3), y = c("a", "b", "c"))
   tib2 <- tibble(x = c(1, 2), y = c("a", "b"))
 
-  result <- Kala:::compareTibbles(tib1, tib2)
+  result <- Kala::compareTibbles(tib1, tib2)
 
   expect_false(result$identical)
   expect_equal(result$additionalColumnsInFirst, character(0))
@@ -52,7 +52,7 @@ test_that("Tibbles with same columns but different number of rows (duplicate tes
   tib1 <- tibble(x = c(1, 2, 3), y = c("a", "b", "c"))
   tib2 <- tibble(x = c(1, 2), y = c("a", "b"))
 
-  result <- Kala:::compareTibbles(tib1, tib2)
+  result <- Kala::compareTibbles(tib1, tib2)
 
   expect_false(result$identical)
   expect_equal(result$additionalColumnsInFirst, character(0))
@@ -70,7 +70,7 @@ test_that("Empty tibbles with identical columns", {
   tib1 <- tibble(x = numeric(), y = character())
   tib2 <- tibble(x = numeric(), y = character())
 
-  result <- Kala:::compareTibbles(tib1, tib2)
+  result <- Kala::compareTibbles(tib1, tib2)
 
   expect_true(result$identical)
   expect_equal(result$additionalColumnsInFirst, character(0))
@@ -82,7 +82,7 @@ test_that("Empty tibbles with different columns", {
   tib1 <- tibble(x = numeric(), y = character())
   tib2 <- tibble(x = numeric(), z = character())
 
-  result <- Kala:::compareTibbles(tib1, tib2)
+  result <- Kala::compareTibbles(tib1, tib2)
 
   expect_false(result$identical)
   expect_equal(result$additionalColumnsInFirst, "y")
