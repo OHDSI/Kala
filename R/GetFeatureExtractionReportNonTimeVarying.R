@@ -24,7 +24,6 @@
 #' @param covariateDataPath A character string specifying the file path to the covariate data.
 #' @param cohortId A numeric or character identifier for the cohort. This ID is used both to filter covariate data and
 #'   as part of the file name pattern for retrieving covariate data.
-#' @param cohortDefinitionSet A data frame or tibble containing the cohort definition set.
 #' @param remove A character string containing a regular expression pattern used to filter out certain covariates
 #'   from the formatted report. The default pattern removes labels related to visit counts, certain risk scores,
 #'   and demographic time metrics. Defaults to \code{'Visit Count|Chads 2 Vasc|Demographics Index Month|Demographics Post Observation Time|Visit Concept Count|Chads 2|Demographics Prior Observation Time|Dcsi|Demographics Time In Cohort|Demographics Index Year Month'}.
@@ -55,11 +54,10 @@
 getFeatureExtractionReportNonTimeVarying <-
   function(covariateDataPath,
            cohortId,
-           cohortDefinitionSet,
            remove = "Visit Count|Chads 2 Vasc|Demographics Index Month|Demographics Post Observation Time|Visit Concept Count|Chads 2|Demographics Prior Observation Time|Dcsi|Demographics Time In Cohort|Demographics Index Year Month") {
     covariateData <-
       FeatureExtraction::loadCovariateData(file = covariateDataPath)
-    
+
     output <-
       getFeatureExtractionReportByTimeWindows(
         covariateData = covariateData,
@@ -68,19 +66,16 @@ getFeatureExtractionReportNonTimeVarying <-
         includedCovariateIds = NULL,
         excludedCovariateIds = NULL,
         table1Specifications = NULL,
-        simple = TRUE,
         cohortId = cohortId,
-        covariateDataFileNamePattern = paste0(cohortId, "$"),
-        cohortDefinitionSet = cohortDefinitionSet,
         cohortName = NULL,
         reportName = NULL,
         format = TRUE
       )
-    
+
     if (is.null(output)) {
       return(NULL)
     }
-    
+
     if (!is.null(remove)) {
       writeLines(paste0("removing from formatted report", remove))
       output$formattedFull <- output$formatted
@@ -91,6 +86,6 @@ getFeatureExtractionReportNonTimeVarying <-
           negate = TRUE
         ))
     }
-    
+
     return(output)
   }
