@@ -91,10 +91,10 @@ getFeatureExtractionDefaultTimeWindows <-
     
     timeWindows <- timeWindows |>
       dplyr::select(
-        startDay,
-        endDay,
-        periodName,
-        windowType
+        .data$startDay,
+        .data$endDay,
+        .data$periodName,
+        .data$windowType
       ) |>
       dplyr::distinct()
     

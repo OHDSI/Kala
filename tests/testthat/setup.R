@@ -5,7 +5,7 @@ library(Kala)
 
 cohortTableName <- paste0("ct_", paste(sample(letters, 10), collapse = ""))
 
-dbms <- getOption("dbms", default = "postgresql")
+dbms <- getOption("dbms", default = "sqlite")
 message("************* Testing on ", dbms, " *************")
 
 if (dir.exists(Sys.getenv("DATABASECONNECTOR_JAR_FOLDER"))) {
@@ -15,7 +15,7 @@ if (dir.exists(Sys.getenv("DATABASECONNECTOR_JAR_FOLDER"))) {
   dir.create(jdbcDriverFolder, showWarnings = FALSE)
   DatabaseConnector::downloadJdbcDrivers("postgresql", pathToDriver = jdbcDriverFolder)
 
-  if (!dbms %in% c("postgresql")) {
+  if (!dbms %in% c("sqlite")) {
     DatabaseConnector::downloadJdbcDrivers(dbms, pathToDriver = jdbcDriverFolder)
   }
 
@@ -27,67 +27,102 @@ if (dir.exists(Sys.getenv("DATABASECONNECTOR_JAR_FOLDER"))) {
   )
 }
 
-folder <- tempfile()
-dir.create(folder, recursive = TRUE)
-skipCdmTests <- FALSE
-
-
-if (dbms == "postgresql") {
-  dbUser <- Sys.getenv("CDM5_POSTGRESQL_USER")
-  dbPassword <- Sys.getenv("CDM5_POSTGRESQL_PASSWORD")
-  dbServer <- Sys.getenv("CDM5_POSTGRESQL_SERVER")
-  cdmDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_CDM_SCHEMA")
-  vocabularyDatabaseSchema <-
-    Sys.getenv("CDM5_POSTGRESQL_CDM_SCHEMA")
-  tempEmulationSchema <- NULL
-  cohortDatabaseSchema <-
-    Sys.getenv("CDM5_POSTGRESQL_OHDSI_SCHEMA")
-} else if (dbms == "oracle") {
-  dbUser <- Sys.getenv("CDM5_ORACLE_USER")
-  dbPassword <- Sys.getenv("CDM5_ORACLE_PASSWORD")
-  dbServer <- Sys.getenv("CDM5_ORACLE_SERVER")
-  cdmDatabaseSchema <- Sys.getenv("CDM5_ORACLE_CDM_SCHEMA")
-  vocabularyDatabaseSchema <- Sys.getenv("CDM5_ORACLE_CDM_SCHEMA")
-  tempEmulationSchema <- Sys.getenv("CDM5_ORACLE_OHDSI_SCHEMA")
-  cohortDatabaseSchema <- Sys.getenv("CDM5_ORACLE_OHDSI_SCHEMA")
-  options(sqlRenderTempEmulationSchema = tempEmulationSchema)
-} else if (dbms == "redshift") {
-  dbUser <- Sys.getenv("CDM5_REDSHIFT_USER")
-  dbPassword <- Sys.getenv("CDM5_REDSHIFT_PASSWORD")
-  dbServer <- Sys.getenv("CDM5_REDSHIFT_SERVER")
-  cdmDatabaseSchema <- Sys.getenv("CDM5_REDSHIFT_CDM_SCHEMA")
-  vocabularyDatabaseSchema <-
-    Sys.getenv("CDM5_REDSHIFT_CDM_SCHEMA")
-  tempEmulationSchema <- NULL
-  cohortDatabaseSchema <- Sys.getenv("CDM5_REDSHIFT_OHDSI_SCHEMA")
-} else if (dbms == "sql server") {
-  dbUser <- Sys.getenv("CDM5_SQL_SERVER_USER")
-  dbPassword <- Sys.getenv("CDM5_SQL_SERVER_PASSWORD")
-  dbServer <- Sys.getenv("CDM5_SQL_SERVER_SERVER")
-  cdmDatabaseSchema <- Sys.getenv("CDM5_SQL_SERVER_CDM_SCHEMA")
-  vocabularyDatabaseSchema <-
-    Sys.getenv("CDM5_SQL_SERVER_CDM_SCHEMA")
-  tempEmulationSchema <- NULL
-  cohortDatabaseSchema <-
-    Sys.getenv("CDM5_SQL_SERVER_OHDSI_SCHEMA")
+# Helper functions ------------
+getTestResourceFilePath <- function(fileName) {
+  return(system.file("testdata", fileName, package = "FeatureExtraction"))
 }
 
-connectionDetails <- DatabaseConnector::createConnectionDetails(
-  dbms = dbms,
-  user = dbUser,
-  password = URLdecode(dbPassword),
-  server = dbServer,
-  pathToDriver = jdbcDriverFolder
-)
-
-if (cdmDatabaseSchema == "" || dbServer == "") {
-  skipCdmTests <- TRUE
+# Use this instead of SqlRender directly to avoid errors when running
+# individual test files
+loadRenderTranslateUnitTestSql <- function(sqlFileName, targetDialect, tempEmulationSchema = NULL, ...) {
+  sql <- SqlRender::readSql(system.file("sql/sql_server/unit_tests/", sqlFileName, package = "FeatureExtraction"))
+  sql <- SqlRender::render(sql = sql, ...)
+  sql <- SqlRender::translate(sql = sql, targetDialect = targetDialect, tempEmulationSchema = tempEmulationSchema)
+  return(sql)
 }
 
+# create unit test data
+createUnitTestData <- function(connectionDetails, cdmDatabaseSchema, ohdsiDatabaseSchema, cohortTable, cohortAttributeTable, attributeDefinitionTable, cohortDefinitionIds = c(1)) {
+  connection <- DatabaseConnector::connect(connectionDetails)
+  sql <- loadRenderTranslateUnitTestSql(
+    sqlFileName = "createTestingData.sql",
+    targetDialect = connectionDetails$dbms,
+    tempEmulationSchema = ohdsiDatabaseSchema,
+    attribute_definition_table = attributeDefinitionTable,
+    cdm_database_schema = cdmDatabaseSchema,
+    cohort_attribute_table = cohortAttributeTable,
+    cohort_database_schema = ohdsiDatabaseSchema,
+    cohort_definition_ids = cohortDefinitionIds,
+    cohort_table = cohortTable
+  )
+  DatabaseConnector::executeSql(connection, sql)
+  return(connection)
+}
 
-withr::defer(
-  {
+dropUnitTestData <- function(connection, ohdsiDatabaseSchema, cohortTable, cohortAttributeTable, attributeDefinitionTable) {
+  sql <- loadRenderTranslateUnitTestSql(
+    sqlFileName = "dropTestingData.sql",
+    targetDialect = connection@dbms,
+    tempEmulationSchema = ohdsiDatabaseSchema,
+    attribute_definition_table = attributeDefinitionTable,
+    cohort_attribute_table = cohortAttributeTable,
+    cohort_database_schema = ohdsiDatabaseSchema,
+    cohort_table = cohortTable
+  )
+  DatabaseConnector::executeSql(connection, sql)
+  DatabaseConnector::disconnect(connection)
+}
 
-  },
-  testthat::teardown_env()
-)
+checkRemoteFileAvailable <- function(remoteFile) {
+  try_GET <- function(x, ...) {
+    tryCatch(
+      httr::GET(url = x, httr::timeout(10), ...),
+      error = function(e) conditionMessage(e),
+      warning = function(w) conditionMessage(w)
+    )
+  }
+  is_response <- function(x) {
+    class(x) == "response"
+  }
+  
+  resp <- try_GET(remoteFile)
+  if (!is_response(resp)) {
+    message(resp)
+    return(NULL)
+  }
+  # Then stop if status > 400
+  if (httr::http_error(resp)) {
+    message_for_status(resp)
+    return(NULL)
+  }
+  return("success")
+}
+
+tableSuffix <- paste0(substr(.Platform$OS.type, 1, 3), format(Sys.time(), "%y%m%d%H%M%S"), sample(1:100, 1))
+cohortTable <- paste0("#fe", tableSuffix)
+cohortAttributeTable <- paste0("c_attr_", tableSuffix)
+attributeDefinitionTable <- paste0("attr_def_", tableSuffix)
+
+if (dbms == "sqlite") {
+  if (!is.null(checkRemoteFileAvailable("https://raw.githubusercontent.com/OHDSI/EunomiaDatasets/main/datasets/GiBleed/GiBleed_5.3.zip"))) {
+    eunomiaConnectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = "testEunomia.sqlite")
+    eunomiaCdmDatabaseSchema <- "main"
+    eunomiaOhdsiDatabaseSchema <- "main"
+    eunomiaConnection <- createUnitTestData(eunomiaConnectionDetails, eunomiaCdmDatabaseSchema, eunomiaOhdsiDatabaseSchema, cohortTable, cohortAttributeTable, attributeDefinitionTable)
+    Eunomia::createCohorts(
+      connectionDetails = eunomiaConnectionDetails,
+      cdmDatabaseSchema = eunomiaCdmDatabaseSchema,
+      cohortDatabaseSchema = eunomiaOhdsiDatabaseSchema,
+      cohortTable = "cohort"
+    )
+  }
+  withr::defer(
+    {
+      if (exists("eunomiaConnection")) {
+        dropUnitTestData(eunomiaConnection, eunomiaOhdsiDatabaseSchema, cohortTable, cohortAttributeTable, attributeDefinitionTable)
+        unlink("testEunomia.sqlite", recursive = TRUE, force = TRUE)
+      }
+    },
+    testthat::teardown_env()
+  )
+}
