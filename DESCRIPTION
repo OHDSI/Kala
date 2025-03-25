@@ -29,9 +29,9 @@ Imports:
 	tibble,
 	tidyr
 Suggests:
-  knitr,
-  testthat,
-  withr
+    knitr,
+    testthat (>= 3.0.0),
+    withr
 Remotes:
 License: Apache License
 VignetteBuilder: knitr
@@ -39,3 +39,4 @@ URL: https://ohdsi.github.io/Kala, https://github.com/OHDSI/Kala
 BugReports: https://github.com/OHDSI/Kala/issues
 RoxygenNote: 7.3.2
 Encoding: UTF-8
+Config/testthat/edition: 3
