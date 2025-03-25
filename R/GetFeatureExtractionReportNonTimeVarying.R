@@ -73,21 +73,21 @@ getFeatureExtractionReportNonTimeVarying <-
         reportName = NULL,
         format = TRUE
       )
-
+    
     if (is.null(output)) {
       return(NULL)
     }
-
+    
     if (!is.null(remove)) {
       writeLines(paste0("removing from formatted report", remove))
       output$formattedFull <- output$formatted
       output$formatted <- output$formatted |>
         dplyr::filter(stringr::str_detect(
-          string = label,
+          string = .data$label,
           pattern = remove,
           negate = TRUE
         ))
     }
-
+    
     return(output)
   }
