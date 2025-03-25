@@ -18,9 +18,9 @@
 #' Extract default time windows for feature extraction
 #'
 #' This function reads a CSV file containing time windows for feature extraction and filters
-#' the time windows based on the cumulative and period type parameters.
+#' the time windows based on the cummulative and period type parameters.
 #'
-#' @param cummulative A logical value indicating whether cumulative time windows should be returned.
+#' @param cummulative A logical value indicating whether cummulative time windows should be returned.
 #'                    Can be TRUE, FALSE, or NULL (default), where NULL returns all records.
 #' @param periodTypes A character vector specifying the types of periods to filter by.
 #'                    Can be "month", "year", or NULL (default), where NULL returns all records.
@@ -40,10 +40,10 @@ getFeatureExtractionDefaultTimeWindows <-
     timeWindows <-
       readr::read_csv(file = filePath, col_types = readr::cols())
 
-    # Assert checks for `cumulative` to be TRUE, FALSE, or NULL
-    checkmate::assert_flag(cumulative, null.ok = TRUE)
+    # Assert checks for `cummulative` to be TRUE, FALSE, or NULL
+    checkmate::assert_flag(cummulative, null.ok = TRUE)
 
-    # Filter for cumulative time windows if `cummulative` is not NULL
+    # Filter for cummulative time windows if `cummulative` is not NULL
     if (!is.null(cummulative)) {
       timeWindows <-
         timeWindows[timeWindows$sequenceCummulative == cummulative, ]

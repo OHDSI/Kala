@@ -7,9 +7,10 @@
 getFeatureExtractionReportNonTimeVarying(
   covariateDataPath,
   cohortId,
-  cohortDefinitionSet,
-  remove =
-    "Visit Count|Chads 2 Vasc|Demographics Index Month|Demographics Post Observation Time|Visit Concept Count|Chads 2|Demographics Prior Observation Time|Dcsi|Demographics Time In Cohort|Demographics Index Year Month"
+  remove = paste(c("Visit Count", "Chads 2 Vasc", "Demographics Index Month",
+    "Demographics Post Observation Time", "Visit Concept Count", "Chads 2",
+    "Demographics Prior Observation Time", "Dcsi", "Demographics Time In Cohort",
+    "Demographics Index Year Month"), collapse = "|")
 )
 }
 \arguments{
@@ -17,8 +18,6 @@ getFeatureExtractionReportNonTimeVarying(
 
 \item{cohortId}{A numeric or character identifier for the cohort. This ID is used both to filter covariate data and
 as part of the file name pattern for retrieving covariate data.}
-
-\item{cohortDefinitionSet}{A data frame or tibble containing the cohort definition set.}
 
 \item{remove}{A character string containing a regular expression pattern used to filter out certain covariates
 from the formatted report. The default pattern removes labels related to visit counts, certain risk scores,

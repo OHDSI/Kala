@@ -24,7 +24,6 @@
 #' @param covariateDataPath A character string specifying the file path to the covariate data.
 #' @param cohortId A numeric or character identifier for the cohort. This ID is used both to filter covariate data and
 #'   as part of the file name pattern for retrieving covariate data.
-#' @param cohortDefinitionSet A data frame or tibble containing the cohort definition set.
 #' @param remove A character string containing a regular expression pattern used to filter out certain covariates
 #'   from the formatted report. The default pattern removes labels related to visit counts, certain risk scores,
 #'   and demographic time metrics. Defaults to \code{'Visit Count|Chads 2 Vasc|Demographics Index Month|Demographics Post Observation Time|Visit Concept Count|Chads 2|Demographics Prior Observation Time|Dcsi|Demographics Time In Cohort|Demographics Index Year Month'}.
@@ -55,20 +54,33 @@
 getFeatureExtractionReportNonTimeVarying <-
   function(covariateDataPath,
            cohortId,
-           cohortDefinitionSet,
-           remove = "Visit Count|Chads 2 Vasc|Demographics Index Month|Demographics Post Observation Time|Visit Concept Count|Chads 2|Demographics Prior Observation Time|Dcsi|Demographics Time In Cohort|Demographics Index Year Month") {
+           remove = paste(
+             c(
+               "Visit Count",
+               "Chads 2 Vasc",
+               "Demographics Index Month",
+               "Demographics Post Observation Time",
+               "Visit Concept Count",
+               "Chads 2",
+               "Demographics Prior Observation Time",
+               "Dcsi",
+               "Demographics Time In Cohort",
+               "Demographics Index Year Month"
+             ),
+             collapse = "|"
+           )) {
+    covariateData <-
+      FeatureExtraction::loadCovariateData(file = covariateDataPath)
+
     output <-
-      getFeatureExtractionReport(
-        covariateDataPath = covariateDataPath,
+      getFeatureExtractionReportByTimeWindows(
+        covariateData = covariateData,
         includeNonTimeVarying = TRUE,
         minAverageValue = 0.01,
         includedCovariateIds = NULL,
         excludedCovariateIds = NULL,
         table1Specifications = NULL,
-        simple = TRUE,
         cohortId = cohortId,
-        covariateDataFileNamePattern = paste0(cohortId, "$"),
-        cohortDefinitionSet = cohortDefinitionSet,
         cohortName = NULL,
         reportName = NULL,
         format = TRUE
@@ -83,7 +95,7 @@ getFeatureExtractionReportNonTimeVarying <-
       output$formattedFull <- output$formatted
       output$formatted <- output$formatted |>
         dplyr::filter(stringr::str_detect(
-          string = label,
+          string = .data$label,
           pattern = remove,
           negate = TRUE
         ))

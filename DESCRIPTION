@@ -26,7 +26,6 @@ Imports:
   readr,
   stringr,
 	SqlRender,
-	tibble,
 	tidyr
 Suggests:
   knitr,
