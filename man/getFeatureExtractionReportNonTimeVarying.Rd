@@ -7,8 +7,10 @@
 getFeatureExtractionReportNonTimeVarying(
   covariateDataPath,
   cohortId,
-  remove =
-    "Visit Count|Chads 2 Vasc|Demographics Index Month|Demographics Post Observation Time|Visit Concept Count|Chads 2|Demographics Prior Observation Time|Dcsi|Demographics Time In Cohort|Demographics Index Year Month"
+  remove = paste(c("Visit Count", "Chads 2 Vasc", "Demographics Index Month",
+    "Demographics Post Observation Time", "Visit Concept Count", "Chads 2",
+    "Demographics Prior Observation Time", "Dcsi", "Demographics Time In Cohort",
+    "Demographics Index Year Month"), collapse = "|")
 )
 }
 \arguments{

@@ -11,7 +11,7 @@ getFeatureExtractionDefaultTimeWindows(
 )
 }
 \arguments{
-\item{cummulative}{A logical value indicating whether cumulative time windows should be returned.
+\item{cummulative}{A logical value indicating whether cummulative time windows should be returned.
 Can be TRUE, FALSE, or NULL (default), where NULL returns all records.}
 
 \item{periodTypes}{A character vector specifying the types of periods to filter by.
@@ -22,5 +22,5 @@ A data frame containing the filtered time windows.
 }
 \description{
 This function reads a CSV file containing time windows for feature extraction and filters
-the time windows based on the cumulative and period type parameters.
+the time windows based on the cummulative and period type parameters.
 }

@@ -41,14 +41,6 @@
 #' covariate IDs (including any provided via \code{covariateIds}) are then made unique and concatenated into a
 #' comma-separated string.
 #'
-#' @examples
-#' \dontrun{
-#' # Generate a Table 1 specification row using concept IDs only:
-#' getTable1SpecificationsRow(analysisId = 1, conceptIds = c(101, 202), label = "Cohorts A")
-#'
-#' # Generate a Table 1 specification row using both concept IDs and covariate IDs:
-#' getTable1SpecificationsRow(analysisId = 2, conceptIds = c(303), covariateIds = c(5000, 6000), label = "Cohorts B")
-#' }
 #'
 #' @export
 getTable1SpecificationsRow <- function(analysisId,
