@@ -581,7 +581,7 @@ getFeatureExtractionReportByTimeWindows <- function(covariateData,
   if (pivot) {
     report <- report |>
       tidyr::pivot_wider(
-        id_cols = .data$idCols,
+        id_cols = idCols,
         names_from = .data$periodName,
         values_from = .data$report
       )
