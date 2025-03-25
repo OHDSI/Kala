@@ -42,22 +42,22 @@ getFeatureExtractionDefaultTimeWindows <-
            selectedcumulative = NULL) {
     filePath <-
       system.file("FeatureExtractionTimeWindows.csv",
-                  package = utils::packageName()
+        package = utils::packageName()
       )
-    
+
     # Reading the CSV file into a data frame
     timeWindows <-
       readr::read_csv(file = filePath, col_types = readr::cols())
-    
+
     # Assert checks for `cumulative` to be TRUE, FALSE, or NULL
     checkmate::assert_flag(cumulative, null.ok = TRUE)
-    
+
     # Filter for cumulative time windows if `cumulative` is not NULL
     if (!is.null(cumulative)) {
       timeWindows <-
         timeWindows[timeWindows$sequenceCumulative == cumulative, ]
     }
-    
+
     # Assert checks for `periodTypes` to be either "month", "year", or NULL
     validPeriods <- c("month", "year")
     if (!is.null(periodTypes)) {
@@ -65,7 +65,7 @@ getFeatureExtractionDefaultTimeWindows <-
       timeWindows <-
         timeWindows[timeWindows$period %in% periodTypes, ]
     }
-    
+
     timeWindows <- timeWindows |>
       dplyr::mutate(periodName = paste0(
         "d",
@@ -73,7 +73,7 @@ getFeatureExtractionDefaultTimeWindows <-
         "d",
         .data$endDay |> as.integer()
       ))
-    
+
     if (isTRUE(selectedcumulative)) {
       filteredDataFrame <- timeWindows |>
         dplyr::select(.data$startDay, .data$endDay) |>
@@ -84,11 +84,11 @@ getFeatureExtractionDefaultTimeWindows <-
         ) |>
         dplyr::mutate(selectedcumulative = 1) |>
         dplyr::distinct()
-      
+
       timeWindows <- timeWindows |>
         dplyr::inner_join(filteredDataFrame, by = c("startDay", "endDay"))
     }
-    
+
     timeWindows <- timeWindows |>
       dplyr::select(
         .data$startDay,
@@ -97,6 +97,6 @@ getFeatureExtractionDefaultTimeWindows <-
         .data$windowType
       ) |>
       dplyr::distinct()
-    
+
     return(timeWindows)
   }

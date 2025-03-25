@@ -84,7 +84,7 @@ checkRemoteFileAvailable <- function(remoteFile) {
   is_response <- function(x) {
     class(x) == "response"
   }
-  
+
   resp <- try_GET(remoteFile)
   if (!is_response(resp)) {
     message(resp)
