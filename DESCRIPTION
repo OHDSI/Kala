@@ -31,7 +31,9 @@ Suggests:
   knitr,
   testthat,
   tibble,
-  withr
+  withr,
+  Eunomia,
+  RSQLite
 Remotes:
 License: Apache License
 VignetteBuilder: knitr
