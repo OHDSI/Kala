@@ -38,9 +38,8 @@ getFeatureExtractionDefaultTimeWindows <-
     timeWindows <-
       readr::read_csv(file = filePath, col_types = readr::cols())
 
-    # Assert checks for `cummulative` to be TRUE, FALSE, or NULL
-    assertthat::assert_that(is.logical(cummulative) ||
-      is.null(cummulative), msg = "cummulative must be TRUE, FALSE, or NULL.")
+    # Assert checks for `cumulative` to be TRUE, FALSE, or NULL
+    checkmate::assert_flag(cumulative, null.ok = TRUE)
 
     # Filter for cumulative time windows if `cummulative` is not NULL
     if (!is.null(cummulative)) {
@@ -51,7 +50,7 @@ getFeatureExtractionDefaultTimeWindows <-
     # Assert checks for `periodTypes` to be either "month", "year", or NULL
     validPeriods <- c("month", "year")
     if (!is.null(periodTypes)) {
-      assertthat::assert_that(all(periodTypes %in% validPeriods), msg = "periodTypes must be 'month', 'year', or NULL.")
+      checkmate::assert_subset(periodTypes, validPeriods)
       timeWindows <-
         timeWindows[timeWindows$period %in% periodTypes, ]
     }
