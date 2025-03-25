@@ -14,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 #' Extract default time windows for feature extraction
 #'
 #' This function reads a CSV file containing time windows for feature extraction and filters
+<<<<<<< HEAD
 #' the time windows based on the cumulative and period type parameters.
 #'
 #' @param cumulative A logical value indicating whether cumulative time windows should be returned.
@@ -27,27 +27,47 @@
 #' @param selectedcumulative A logical value indicating whether cumulative time windows should be returned.
 #'                            Can be TRUE, FALSE, or NULL (default), where NULL returns all records.
 #' @return A data frame containing the filtered time windows.
+=======
+#' the time windows based on the `cummulative`, `periodTypes`, and `selectedCummulative` parameters.
+#' The `cummulative` parameter filters the time windows by matching the `sequenceCummulative` column,
+#' while `periodTypes` allows filtering by period types (e.g., "month" or "year"). Additionally, if
+#' `selectedCummulative` is TRUE, the function further restricts the results to a predefined subset
+#' of cumulative time windows.
+#'
+#' @param cummulative A logical value indicating whether cumulative time windows should be returned.
+#'                    TRUE returns only cumulative time windows, FALSE returns non-cumulative windows,
+#'                    and NULL (default) returns all records.
+#' @param periodTypes A character vector specifying the types of periods to filter by.
+#'                    Valid values are "month" or "year". If NULL (default), all period types are returned.
+#' @param selectedCummulative A logical flag that, if TRUE, filters the results to include only
+#'                            a selected subset of cumulative time windows based on specific startDay
+#'                            and endDay criteria.
+#'
+#' @return A data frame containing the filtered time windows with columns: startDay, endDay, periodName,
+#'         and windowType.
 #' @export
 getFeatureExtractionDefaultTimeWindows <-
-  function(cumulative = NULL,
+  function(cummulative = NULL,
            periodTypes = NULL,
-           selectedcumulative = NULL) {
-    # Path to default CSV
+           selectedCummulative = NULL) {
     filePath <-
-      system.file("FeatureExtractionTimeWindows.csv", package = "Kala")
+      system.file("FeatureExtractionTimeWindows.csv",
+                  package = utils::packageName()
+      )
     
     # Reading the CSV file into a data frame
     timeWindows <-
       readr::read_csv(file = filePath, col_types = readr::cols())
     
-    # Assert checks for `cumulative` to be TRUE, FALSE, or NULL
-    checkmate::assert_flag(cumulative, null.ok = TRUE)
+    # Assert checks for `cummulative` to be TRUE, FALSE, or NULL
+    checkmate::assert_flag(cummulative, null.ok = TRUE)
     
-    # Filter for cumulative time windows if `cumulative` is not NULL
-    if (!is.null(cumulative)) {
+    # Filter for cumulative time windows if `cummulative` is not NULL
+    if (!is.null(cummulative)) {
       timeWindows <-
-        timeWindows[timeWindows$sequenceCumulative == cumulative, ]
+        timeWindows[timeWindows$sequenceCummulative == cummulative, ]
     }
+    
     
     # Assert checks for `periodTypes` to be either "month", "year", or NULL
     validPeriods <- c("month", "year")
@@ -88,7 +108,6 @@ getFeatureExtractionDefaultTimeWindows <-
         .data$windowType
       ) |>
       dplyr::distinct()
-
 
     return(timeWindows)
   }

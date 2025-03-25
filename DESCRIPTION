@@ -28,9 +28,10 @@ Imports:
 	SqlRender,
 	tidyr
 Suggests:
-    knitr,
-    testthat (>= 3.0.0),
-    withr
+  knitr,
+  testthat,
+  tibble,
+  withr
 Remotes:
 License: Apache License
 VignetteBuilder: knitr
