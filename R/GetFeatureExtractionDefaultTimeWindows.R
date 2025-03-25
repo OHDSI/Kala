@@ -17,39 +17,29 @@
 #' Extract default time windows for feature extraction
 #'
 #' This function reads a CSV file containing time windows for feature extraction and filters
-<<<<<<< HEAD
-#' the time windows based on the cumulative and period type parameters.
-#'
-#' @param cumulative A logical value indicating whether cumulative time windows should be returned.
-#'                    Can be TRUE, FALSE, or NULL (default), where NULL returns all records.
-#' @param periodTypes A character vector specifying the types of periods to filter by.
-#'                    Can be "month", "year", or NULL (default), where NULL returns all records.
-#' @param selectedcumulative A logical value indicating whether cumulative time windows should be returned.
-#'                            Can be TRUE, FALSE, or NULL (default), where NULL returns all records.
-#' @return A data frame containing the filtered time windows.
-=======
-#' the time windows based on the `cummulative`, `periodTypes`, and `selectedCummulative` parameters.
-#' The `cummulative` parameter filters the time windows by matching the `sequenceCummulative` column,
+#' the time windows based on the `cumulative`, `periodTypes`, and `selectedcumulative` parameters.
+#' The `cumulative` parameter filters the time windows by matching the `sequencecumulative` column,
 #' while `periodTypes` allows filtering by period types (e.g., "month" or "year"). Additionally, if
-#' `selectedCummulative` is TRUE, the function further restricts the results to a predefined subset
+#' `selectedcumulative` is TRUE, the function further restricts the results to a predefined subset
 #' of cumulative time windows.
 #'
-#' @param cummulative A logical value indicating whether cumulative time windows should be returned.
+#' @param cumulative A logical value indicating whether cumulative time windows should be returned.
 #'                    TRUE returns only cumulative time windows, FALSE returns non-cumulative windows,
 #'                    and NULL (default) returns all records.
 #' @param periodTypes A character vector specifying the types of periods to filter by.
 #'                    Valid values are "month" or "year". If NULL (default), all period types are returned.
-#' @param selectedCummulative A logical flag that, if TRUE, filters the results to include only
+#' @param selectedcumulative A logical flag that, if TRUE, filters the results to include only
 #'                            a selected subset of cumulative time windows based on specific startDay
 #'                            and endDay criteria.
 #'
 #' @return A data frame containing the filtered time windows with columns: startDay, endDay, periodName,
 #'         and windowType.
+
 #' @export
 getFeatureExtractionDefaultTimeWindows <-
-  function(cummulative = NULL,
+  function(cumulative = NULL,
            periodTypes = NULL,
-           selectedCummulative = NULL) {
+           selectedcumulative = NULL) {
     filePath <-
       system.file("FeatureExtractionTimeWindows.csv",
                   package = utils::packageName()
@@ -59,15 +49,14 @@ getFeatureExtractionDefaultTimeWindows <-
     timeWindows <-
       readr::read_csv(file = filePath, col_types = readr::cols())
     
-    # Assert checks for `cummulative` to be TRUE, FALSE, or NULL
-    checkmate::assert_flag(cummulative, null.ok = TRUE)
+    # Assert checks for `cumulative` to be TRUE, FALSE, or NULL
+    checkmate::assert_flag(cumulative, null.ok = TRUE)
     
-    # Filter for cumulative time windows if `cummulative` is not NULL
-    if (!is.null(cummulative)) {
+    # Filter for cumulative time windows if `cumulative` is not NULL
+    if (!is.null(cumulative)) {
       timeWindows <-
-        timeWindows[timeWindows$sequenceCummulative == cummulative, ]
+        timeWindows[timeWindows$sequenceCumulative == cumulative, ]
     }
-    
     
     # Assert checks for `periodTypes` to be either "month", "year", or NULL
     validPeriods <- c("month", "year")
@@ -102,12 +91,12 @@ getFeatureExtractionDefaultTimeWindows <-
     
     timeWindows <- timeWindows |>
       dplyr::select(
-        .data$startDay,
-        .data$endDay,
-        .data$periodName,
-        .data$windowType
+        startDay,
+        endDay,
+        periodName,
+        windowType
       ) |>
       dplyr::distinct()
-
+    
     return(timeWindows)
   }
