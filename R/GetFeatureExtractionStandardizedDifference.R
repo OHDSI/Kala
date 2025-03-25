@@ -99,7 +99,7 @@ getFeatureExtractionStandardizedDifference <-
       timeRef <- timeRefFromCovariateData |>
         dplyr::inner_join(
           timeRef |>
-            dplyr::select(startDay, endDay) |>
+            dplyr::select(.data$startDay, .data$endDay) |>
             dplyr::distinct(),
           by = c("startDay", "endDay")
         )
