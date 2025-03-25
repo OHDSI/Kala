@@ -1,1 +1,99 @@
-startDay,endDay,windowType,sequenceCummulative,period-9999,0,anytime prior,,-9999,-1,anytime prior not including day 0,,-365,0,long term prior,TRUE,-180,0,medium term prior,TRUE,-30,0,short term prior,TRUE,-365,-31,one year prior to -31,,-30,-1,30 day prior not including day 0,FALSE,month0,0,index date only,TRUE,month31,365,31 days after to 365 days after,,-9999,9999,anytime prior to any time future,,-30,-1,last 30 days not including day 0,FALSE,month-60,-31,last 60 days not including day 0,FALSE,month-90,-61,last 90 days not including day 0,FALSE,month-120,-91,last 120 days not including day 0,FALSE,month31,60,31-60 days after,FALSE,month61,90,61-90 days after,FALSE,month91,120,91-120 days after,FALSE,month-7,7,proximal 7 days,,-1,1,proximal 1 day,,-31,-2,sequence of 30-day intervals prior,,-61,-32,sequence of 30-day intervals prior,FALSE,month-91,-62,sequence of 30-day intervals prior,FALSE,month-121,-92,sequence of 30-day intervals prior,FALSE,month-151,-122,sequence of 30-day intervals prior,FALSE,month-181,-152,sequence of 30-day intervals prior,FALSE,month-211,-182,sequence of 30-day intervals prior,FALSE,month-241,-212,sequence of 30-day intervals prior,FALSE,month-271,-242,sequence of 30-day intervals prior,FALSE,month-301,-272,sequence of 30-day intervals prior,FALSE,month-331,-302,sequence of 30-day intervals prior,FALSE,month-361,-332,sequence of 30-day intervals prior,FALSE,month-391,-362,sequence of 30-day intervals prior,FALSE,month-29,0,sequence of 30-day intervals after,,1,30,sequence of 30-day intervals after,FALSE,month31,60,sequence of 30-day intervals after,FALSE,month61,90,sequence of 30-day intervals after,FALSE,month91,120,sequence of 30-day intervals after,FALSE,month121,150,sequence of 30-day intervals after,FALSE,month151,180,sequence of 30-day intervals after,FALSE,month181,210,sequence of 30-day intervals after,FALSE,month211,240,sequence of 30-day intervals after,FALSE,month241,270,sequence of 30-day intervals after,FALSE,month271,300,sequence of 30-day intervals after,FALSE,month301,330,sequence of 30-day intervals after,FALSE,month331,360,sequence of 30-day intervals after,FALSE,month-365,-1,one year prior,,1,365,one day after to 365 days after,,-31,-1,sequence of 30-day intervals prior,TRUE,month-61,-1,sequence of 30-day intervals prior,TRUE,month-91,-1,sequence of 30-day intervals prior,TRUE,month-121,-1,sequence of 30-day intervals prior,TRUE,month-151,-1,sequence of 30-day intervals prior,TRUE,month-181,-1,sequence of 30-day intervals prior,TRUE,month-211,-1,sequence of 30-day intervals prior,TRUE,month-241,-1,sequence of 30-day intervals prior,TRUE,month-271,-1,sequence of 30-day intervals prior,TRUE,month-301,-1,sequence of 30-day intervals prior,TRUE,month-331,-1,sequence of 30-day intervals prior,TRUE,month-361,-1,sequence of 30-day intervals prior,TRUE,month-391,-1,sequence of 30-day intervals prior,TRUE,month1,1,sequence of 1's matching length of above sequence,TRUE,month1,31,sequence of 1's matching length of above sequence,TRUE,month1,61,sequence of 1's matching length of above sequence,TRUE,month1,91,sequence of 1's matching length of above sequence,TRUE,month1,121,sequence of 1's matching length of above sequence,TRUE,month1,151,sequence of 1's matching length of above sequence,TRUE,month1,181,sequence of 1's matching length of above sequence,TRUE,month1,211,sequence of 1's matching length of above sequence,TRUE,month1,241,sequence of 1's matching length of above sequence,TRUE,month1,271,sequence of 1's matching length of above sequence,TRUE,month1,301,sequence of 1's matching length of above sequence,TRUE,month1,331,sequence of 1's matching length of above sequence,TRUE,month1,361,sequence of 1's matching length of above sequence,TRUE,month0,9999,day 0 to any time after,,1,9999,day 1 to anytime after,,0,365,day 0 to 365 days after,,-365,-1,sequence of yearly intervals prior,FALSE,year-730,-366,sequence of yearly intervals prior,FALSE,year-1095,-731,sequence of yearly intervals prior,FALSE,year-1460,-1096,sequence of yearly intervals prior,FALSE,year-1825,-1461,sequence of yearly intervals prior,FALSE,year-2190,-1826,sequence of yearly intervals prior,FALSE,year-2555,-2191,sequence of yearly intervals prior,FALSE,year-2920,-2556,sequence of yearly intervals prior,FALSE,year-3285,-2921,sequence of yearly intervals prior,FALSE,year-3650,-3286,sequence of yearly intervals prior,FALSE,year-4015,-3651,sequence of yearly intervals prior,FALSE,year-364,0,sequence of yearly intervals after,FALSE,year1,365,sequence of yearly intervals after,FALSE,year366,730,sequence of yearly intervals after,FALSE,year731,1095,sequence of yearly intervals after,FALSE,year1096,1460,sequence of yearly intervals after,FALSE,year1461,1825,sequence of yearly intervals after,FALSE,year1826,2190,sequence of yearly intervals after,FALSE,year2191,2555,sequence of yearly intervals after,FALSE,year2556,2920,sequence of yearly intervals after,FALSE,year2921,3285,sequence of yearly intervals after,FALSE,year3286,3650,sequence of yearly intervals after,FALSE,year
+startDay,endDay,windowType,sequenceCumulative,period
+-9999,0,anytime prior,,
+-9999,-1,anytime prior not including day 0,,
+-365,0,long term prior,TRUE,
+-180,0,medium term prior,TRUE,
+-30,0,short term prior,TRUE,
+-365,-31,one year prior to -31,,
+-30,-1,30 day prior not including day 0,FALSE,month
+0,0,index date only,TRUE,month
+31,365,31 days after to 365 days after,,
+-9999,9999,anytime prior to any time future,,
+-30,-1,last 30 days not including day 0,FALSE,month
+-60,-31,last 60 days not including day 0,FALSE,month
+-90,-61,last 90 days not including day 0,FALSE,month
+-120,-91,last 120 days not including day 0,FALSE,month
+31,60,31-60 days after,FALSE,month
+61,90,61-90 days after,FALSE,month
+91,120,91-120 days after,FALSE,month
+-7,7,proximal 7 days,,
+-1,1,proximal 1 day,,
+-31,-2,sequence of 30-day intervals prior,,
+-61,-32,sequence of 30-day intervals prior,FALSE,month
+-91,-62,sequence of 30-day intervals prior,FALSE,month
+-121,-92,sequence of 30-day intervals prior,FALSE,month
+-151,-122,sequence of 30-day intervals prior,FALSE,month
+-181,-152,sequence of 30-day intervals prior,FALSE,month
+-211,-182,sequence of 30-day intervals prior,FALSE,month
+-241,-212,sequence of 30-day intervals prior,FALSE,month
+-271,-242,sequence of 30-day intervals prior,FALSE,month
+-301,-272,sequence of 30-day intervals prior,FALSE,month
+-331,-302,sequence of 30-day intervals prior,FALSE,month
+-361,-332,sequence of 30-day intervals prior,FALSE,month
+-391,-362,sequence of 30-day intervals prior,FALSE,month
+-29,0,sequence of 30-day intervals after,,
+1,30,sequence of 30-day intervals after,FALSE,month
+31,60,sequence of 30-day intervals after,FALSE,month
+61,90,sequence of 30-day intervals after,FALSE,month
+91,120,sequence of 30-day intervals after,FALSE,month
+121,150,sequence of 30-day intervals after,FALSE,month
+151,180,sequence of 30-day intervals after,FALSE,month
+181,210,sequence of 30-day intervals after,FALSE,month
+211,240,sequence of 30-day intervals after,FALSE,month
+241,270,sequence of 30-day intervals after,FALSE,month
+271,300,sequence of 30-day intervals after,FALSE,month
+301,330,sequence of 30-day intervals after,FALSE,month
+331,360,sequence of 30-day intervals after,FALSE,month
+-365,-1,one year prior,,
+1,365,one day after to 365 days after,,
+-31,-1,sequence of 30-day intervals prior,TRUE,month
+-61,-1,sequence of 30-day intervals prior,TRUE,month
+-91,-1,sequence of 30-day intervals prior,TRUE,month
+-121,-1,sequence of 30-day intervals prior,TRUE,month
+-151,-1,sequence of 30-day intervals prior,TRUE,month
+-181,-1,sequence of 30-day intervals prior,TRUE,month
+-211,-1,sequence of 30-day intervals prior,TRUE,month
+-241,-1,sequence of 30-day intervals prior,TRUE,month
+-271,-1,sequence of 30-day intervals prior,TRUE,month
+-301,-1,sequence of 30-day intervals prior,TRUE,month
+-331,-1,sequence of 30-day intervals prior,TRUE,month
+-361,-1,sequence of 30-day intervals prior,TRUE,month
+-391,-1,sequence of 30-day intervals prior,TRUE,month
+1,1,sequence of 1's matching length of above sequence,TRUE,month
+1,31,sequence of 1's matching length of above sequence,TRUE,month
+1,61,sequence of 1's matching length of above sequence,TRUE,month
+1,91,sequence of 1's matching length of above sequence,TRUE,month
+1,121,sequence of 1's matching length of above sequence,TRUE,month
+1,151,sequence of 1's matching length of above sequence,TRUE,month
+1,181,sequence of 1's matching length of above sequence,TRUE,month
+1,211,sequence of 1's matching length of above sequence,TRUE,month
+1,241,sequence of 1's matching length of above sequence,TRUE,month
+1,271,sequence of 1's matching length of above sequence,TRUE,month
+1,301,sequence of 1's matching length of above sequence,TRUE,month
+1,331,sequence of 1's matching length of above sequence,TRUE,month
+1,361,sequence of 1's matching length of above sequence,TRUE,month
+0,9999,day 0 to any time after,,
+1,9999,day 1 to anytime after,,
+0,365,day 0 to 365 days after,,
+-365,-1,sequence of yearly intervals prior,FALSE,year
+-730,-366,sequence of yearly intervals prior,FALSE,year
+-1095,-731,sequence of yearly intervals prior,FALSE,year
+-1460,-1096,sequence of yearly intervals prior,FALSE,year
+-1825,-1461,sequence of yearly intervals prior,FALSE,year
+-2190,-1826,sequence of yearly intervals prior,FALSE,year
+-2555,-2191,sequence of yearly intervals prior,FALSE,year
+-2920,-2556,sequence of yearly intervals prior,FALSE,year
+-3285,-2921,sequence of yearly intervals prior,FALSE,year
+-3650,-3286,sequence of yearly intervals prior,FALSE,year
+-4015,-3651,sequence of yearly intervals prior,FALSE,year
+-364,0,sequence of yearly intervals after,FALSE,year
+1,365,sequence of yearly intervals after,FALSE,year
+366,730,sequence of yearly intervals after,FALSE,year
+731,1095,sequence of yearly intervals after,FALSE,year
+1096,1460,sequence of yearly intervals after,FALSE,year
+1461,1825,sequence of yearly intervals after,FALSE,year
+1826,2190,sequence of yearly intervals after,FALSE,year
+2191,2555,sequence of yearly intervals after,FALSE,year
+2556,2920,sequence of yearly intervals after,FALSE,year
+2921,3285,sequence of yearly intervals after,FALSE,year
+3286,3650,sequence of yearly intervals after,FALSE,year
