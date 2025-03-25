@@ -2,4 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-testEunomia.sqlite
+*.sqlite
+.sqlite
+/results/*
