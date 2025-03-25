@@ -24,6 +24,8 @@
 #'                    Can be TRUE, FALSE, or NULL (default), where NULL returns all records.
 #' @param periodTypes A character vector specifying the types of periods to filter by.
 #'                    Can be "month", "year", or NULL (default), where NULL returns all records.
+#' @param selectedCummulative A logical value indicating whether cumulative time windows should be returned.
+#'                            Can be TRUE, FALSE, or NULL (default), where NULL returns all records.
 #' @return A data frame containing the filtered time windows.
 #' @export
 getFeatureExtractionDefaultTimeWindows <-

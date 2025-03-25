@@ -26,7 +26,8 @@
 #' @examples
 #' commaSeparatedStringToIntArray("1,2,3,4")
 #' # [1] 1 2 3 4
-#'
+#' 
+#' @export
 commaSeparatedStringToIntArray <- function(inputString) {
   # Split the string into elements based on commas
   stringElements <- strsplit(inputString, ",")[[1]]

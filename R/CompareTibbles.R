@@ -65,6 +65,7 @@
 #' compareTibbles(tib1, tib2)
 #' }
 #'
+#' @export
 compareTibbles <- function(tibble1, tibble2) {
   # Initialize result list
   result <- list()
