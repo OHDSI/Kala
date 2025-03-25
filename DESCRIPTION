@@ -21,19 +21,21 @@ Imports:
   dplyr,
 	FeatureExtraction,
   lifecycle,
-  rlang,
   ParallelLogger,
   readr,
+  rlang,
   stringr,
 	SqlRender,
 	tidyr
 Suggests:
+  Eunomia,
+  httr,
   knitr,
+  RSQLite,
   testthat,
   tibble,
   withr,
-  Eunomia,
-  RSQLite
+  zip
 Remotes:
 License: Apache License
 VignetteBuilder: knitr
