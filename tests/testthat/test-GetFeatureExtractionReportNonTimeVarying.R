@@ -18,6 +18,6 @@ test_that("Get report (NonTimeVarying)", {
   
   stopifnot(max(reportNonTimeVarying$formatted$conceptId) == 46235214)
   
-  expect_equals(reportNonTimeVarying$formatted$nonTimeVarying[1:10],c("3.0", "0.1", "1.0", "1.0", "1.0", "3.0", "0.1", "1.0", "1.0", "1.0"))
+  expect_equal(reportNonTimeVarying$formatted$nonTimeVarying[1:10],c("3.0", "0.1", "1.0", "1.0", "1.0", "3.0", "0.1", "1.0", "1.0", "1.0"))
   
 })

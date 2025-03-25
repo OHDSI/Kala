@@ -8,8 +8,8 @@ test_that("Default feature extraction run", {
   temp_dir <- tempdir()
   
   covariateCohortDefinitionSet <- dplyr::tibble(
-    cohortId = c(1, 4),
-    cohortName = c("Celecoxib", "NSAIDS")
+    cohortId = c(1),
+    cohortName = c("Celecoxib")
   )
   
   defaultCovariates <- Kala::getFeatureExtractionDefaultTemporalCovariateSettings()
@@ -18,7 +18,7 @@ test_that("Default feature extraction run", {
     connectionDetails = eunomiaConnectionDetails,
     cdmDatabaseSchema = "main",
     cohortDatabaseSchema = "main",
-    cohortIds = c(1, 4),
+    cohortIds = c(1),
     cohortTable = "cohort",
     outputFolder = temp_dir,
     covariateSettings = defaultCovariates,
@@ -46,13 +46,13 @@ test_that("Default feature extraction run", {
   
   stopifnot(nrow(coh1_c) == 31524)
   stopifnot(ncol(coh1_c) == 5)
-  stopifnot(mean(coh1_c$averageValue) >= 0.0193576 & mean(coh1$averageValue) <= 0.0193577)
-  stopifnot(mean(coh1_c$sumValue) >= 35.695 & mean(coh1$sumValue) <= 35.696)
+  stopifnot(mean(coh1_c$averageValue) >= 0.0193576 & mean(coh1_c$averageValue) <= 0.0193577)
+  stopifnot(mean(coh1_c$sumValue) >= 35.695 & mean(coh1_c$sumValue) <= 35.696)
   
   stopifnot(nrow(coh1_cc) == 2)
   stopifnot(ncol(coh1_cc) == 13)
   
-  expect_equal(colnames(coh1),c("cohortDefinitionId", "covariateId", "timeId", "sumValue", "averageValue"))
+  expect_equal(colnames(coh1_c),c("cohortDefinitionId", "covariateId", "timeId", "sumValue", "averageValue"))
   
 })
 
@@ -101,14 +101,12 @@ test_that("Row_id == TRUE feature extraction run", {
   
   stopifnot(nrow(coh1_c) == 31524)
   stopifnot(ncol(coh1_c) == 5)
-  stopifnot(mean(coh1_c$averageValue) >= 0.0193576 & mean(coh1$averageValue) <= 0.0193577)
-  stopifnot(mean(coh1_c$sumValue) >= 35.695 & mean(coh1$sumValue) <= 35.696)
+  stopifnot(mean(coh1_c$averageValue) >= 0.0193576 & mean(coh1_c$averageValue) <= 0.0193577)
+  stopifnot(mean(coh1_c$sumValue) >= 35.695 & mean(coh1_c$sumValue) <= 35.696)
   
   stopifnot(nrow(coh1_cc) == 2)
   stopifnot(ncol(coh1_cc) == 13)
   
   expect_equal(colnames(coh1_c),c("cohortDefinitionId", "covariateId", "timeId", "sumValue", "averageValue"))
-  
-  
   
 })

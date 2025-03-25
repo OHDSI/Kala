@@ -544,9 +544,9 @@ getFeatureExtractionReportByTimeWindows <- function(covariateData,
               .data$labelId,
               .data$label,
               .data$covariateId,
-              .data$timeId,
-              .data$periodName,
-              .data$covariateName
+              .data$covariateName,
+              .data$covariateIds,
+              .data$analysisId
             ) |>
             dplyr::mutate(source = 1)
         ) |>
