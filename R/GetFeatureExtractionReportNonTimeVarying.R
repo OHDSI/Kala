@@ -95,7 +95,7 @@ getFeatureExtractionReportNonTimeVarying <-
       output$formattedFull <- output$formatted
       output$formatted <- output$formatted |>
         dplyr::filter(stringr::str_detect(
-          string = .data$label,
+          string = .data$covariateName,
           pattern = remove,
           negate = TRUE
         ))
