@@ -11,19 +11,26 @@ getFeatureExtractionDefaultTimeWindows(
 )
 }
 \arguments{
-\item{cummulative}{A logical value indicating whether cummulative time windows should be returned.
-Can be TRUE, FALSE, or NULL (default), where NULL returns all records.}
+\item{cummulative}{A logical value indicating whether cumulative time windows should be returned.
+TRUE returns only cumulative time windows, FALSE returns non-cumulative windows,
+and NULL (default) returns all records.}
 
 \item{periodTypes}{A character vector specifying the types of periods to filter by.
-Can be "month", "year", or NULL (default), where NULL returns all records.}
+Valid values are "month" or "year". If NULL (default), all period types are returned.}
 
-\item{selectedCummulative}{A logical value indicating whether cumulative time windows should be returned.
-Can be TRUE, FALSE, or NULL (default), where NULL returns all records.}
+\item{selectedCummulative}{A logical flag that, if TRUE, filters the results to include only
+a selected subset of cumulative time windows based on specific startDay
+and endDay criteria.}
 }
 \value{
-A data frame containing the filtered time windows.
+A data frame containing the filtered time windows with columns: startDay, endDay, periodName,
+        and windowType.
 }
 \description{
 This function reads a CSV file containing time windows for feature extraction and filters
-the time windows based on the cummulative and period type parameters.
+the time windows based on the `cummulative`, `periodTypes`, and `selectedCummulative` parameters.
+The `cummulative` parameter filters the time windows by matching the `sequenceCummulative` column,
+while `periodTypes` allows filtering by period types (e.g., "month" or "year"). Additionally, if
+`selectedCummulative` is TRUE, the function further restricts the results to a predefined subset
+of cumulative time windows.
 }

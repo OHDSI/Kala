@@ -30,6 +30,7 @@ Imports:
 Suggests:
   knitr,
   testthat,
+  tibble,
   withr
 Remotes:
 License: Apache License
