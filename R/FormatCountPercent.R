@@ -37,6 +37,7 @@
 #' # Might return "123,456 (78.90%)"
 #' }
 #'
+#' @export
 formatCountPercent <- function(count, percent, percentDigits = 1) {
   return(paste0(
     formatIntegerWithComma(count),
@@ -63,6 +64,7 @@ formatCountPercent <- function(count, percent, percentDigits = 1) {
 #' formatIntegerWithComma(1234567)
 #' # [1] "1,234,567"
 #'
+#' @export
 formatIntegerWithComma <- function(number) {
   # Truncate the number to its integer part:
   truncated <- as.integer(number)
