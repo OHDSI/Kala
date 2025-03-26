@@ -21,3 +21,4 @@ docs
 compare_versions
 _pkgdown.yml
 examplePackage
+testEunomia.sqlite

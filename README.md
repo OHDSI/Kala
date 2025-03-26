@@ -8,18 +8,28 @@ Introduction
 ============
 Researchers often need to compare features (e.g., comorbidities, drug exposures, or other clinical observations) across different time windows before or after a key event. Kala streamlines this process by:
 
-1. Taking one or more target cohorts (already instantiated in your OMOP CDM).
-2. Generating features across configurable time windows using temporalCovariateSettings.
-3. Producing tabular and graphical summaries of the features, allowing you to compare and interpret changes across time.
-4. (Optionally) Creating time-series analyses—both regular and irregular time windows—providing decomposition and statistical summaries for trends, seasonality, and more.
+1. Cohort Input: Taking one or more target cohorts (already instantiated in your OMOP CDM).
+2. Temporal Feature Generation: Generating features across configurable time windows using temporalCovariateSettings.
+3. Summarized Reporting: Producing tabular and graphical summaries of the features, allowing you to compare and interpret changes across time.
+4. Time-Series Analyses: (Optionally) Creating time-series analyses—both for regular and irregular time windows—that provide decomposition and statistical summaries for trends, seasonality, and more.
 
-The end result is a cohesive set of reports that simplify understanding of temporal patterns in your data.
+The end result is a cohesive set of reports that simplify the understanding of temporal patterns in your data.
 
 Features
 ========
 - Time-Window-Based Feature Construction: Leverages FeatureExtraction to construct features for specified temporal windows (e.g., -365 to -1 days, 0 to 30 days, etc.).
 - Intuitive Reporting: Outputs simple comparison tables with each time window as a column and features as rows, making it easier to identify trends and differences.
 - Time-Series Visualization: Creates time-series plots (with or without interruptions) for your selected features, offering decompositions and highlighting patterns that might not be apparent in standard tables.
+
+How Kala is Useful
+========
+
+Kala is particularly useful for observational health data research by:
+
+- Facilitating Temporal Comparisons: It provides a systematic approach to extract and compare patient-level features before and after a key event, enabling deeper insights into patient trajectories and outcomes.
+- Enhancing Visual Analysis: Through its time-series visualizations and decomposition analyses, users can quickly identify trends, seasonal effects, and irregular patterns that might be missed in static summaries.
+- Improving Reproducibility and Standardization: Operating within the OHDSI framework and using the OMOP CDM, Kala ensures that feature extraction is consistent, reproducible, and scalable across different datasets and studies.
+- Streamlining Reporting: The combination of tabular outputs and visual reports makes it easier for researchers to present and communicate their findings, supporting better decision-making in clinical research and observational studies.
 
 Screenshot
 ==========
