@@ -21,17 +21,21 @@ Imports:
   dplyr,
 	FeatureExtraction,
   lifecycle,
-  rlang,
   ParallelLogger,
   readr,
+  rlang,
   stringr,
 	SqlRender,
 	tidyr
 Suggests:
+  Eunomia,
+  httr,
   knitr,
+  RSQLite,
   testthat,
   tibble,
-  withr
+  withr,
+  zip
 Remotes:
 License: Apache License
 VignetteBuilder: knitr
@@ -39,3 +43,4 @@ URL: https://ohdsi.github.io/Kala, https://github.com/OHDSI/Kala
 BugReports: https://github.com/OHDSI/Kala/issues
 RoxygenNote: 7.3.2
 Encoding: UTF-8
+Config/testthat/edition: 3
