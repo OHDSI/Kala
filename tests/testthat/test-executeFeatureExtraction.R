@@ -167,34 +167,6 @@ test_that("aggregated FALSE and more than one cohort id", {
 })
 
 
-
-
-test_that("No timewindows - to get better test coverage", {
-  temp_dir <- tempfile()
-  unlink(temp_dir)
-
-  covariateCohortDefinitionSet <- dplyr::tibble(
-    cohortId = c(1),
-    cohortName = c("Celecoxib")
-  )
-
-  defaultCovariates <- getFeatureExtractionDefaultTemporalCovariateSettings()
-
-  executeFeatureExtraction(
-    connectionDetails = eunomiaConnectionDetails,
-    cdmDatabaseSchema = "main",
-    cohortDatabaseSchema = "main",
-    cohortIds = c(1),
-    cohortTable = "cohort",
-    outputFolder = temp_dir,
-    covariateSettings = NULL,
-    covariateCohortDefinitionSet = covariateCohortDefinitionSet,
-    addCohortBasedTemporalCovariateSettings = FALSE
-  )
-})
-
-
-
 test_that("no covariateCohortDefinitionSet", {
   temp_dir <- tempdir()
 
