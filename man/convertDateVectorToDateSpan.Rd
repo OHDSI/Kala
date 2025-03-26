@@ -9,12 +9,12 @@ convertDateVectorToDateSpan(x, unit = NULL, week_start = NULL)
 \arguments{
 \item{x}{A vector of dates.}
 
-\item{unit}{(Optional) A character string specifying a calendar unit such as 
-day, week, month, quarter and year. Options are from 
+\item{unit}{(Optional) A character string specifying a calendar unit such as
+day, week, month, quarter and year. Options are from
 \code{lubridate::floor_date}.}
 
-\item{week_start}{(Optional) when unit is weeks, specify the reference day. 7 (default) 
-represents Sunday and 1 represents Monday. Options from 
+\item{week_start}{(Optional) when unit is weeks, specify the reference day. 7 (default)
+represents Sunday and 1 represents Monday. Options from
 \code{lubridate::floor_date}.}
 }
 \value{
@@ -22,12 +22,14 @@ A tibble with two date columns startDate, endDate.
 }
 \description{
 This function takes an input vector of dates and outputs a data frame (tibble) with
-date spans represented by startDate and endDate - both dates inclusive. Optionally, 
+date spans represented by startDate and endDate - both dates inclusive. Optionally,
 the date spans maybe rounded using the parameters and conventions in \code{lubridate::floor_date}.
 }
 \examples{
 \dontrun{
-connection <- convertDateVectorToDateSpan(x = dataFrame,
-                                          date = date)
+connection <- convertDateVectorToDateSpan(
+  x = dataFrame,
+  date = date
+)
 }
 }

@@ -35,7 +35,7 @@ source(paste0(filePathSourceFiles, '/ignoreThisFile.R'))
 
 connectionDetails = NULL
 connection = NULL
-connectionDetailsMetaData <- redShiftConnectionDetailsMetaData %>%
+connectionDetailsMetaData <- redShiftConnectionDetailsMetaData |>
   dplyr::filter(
     sourceKey %in% c(
       'OPTUM_EXTENDED_DOD',
@@ -55,7 +55,7 @@ z <- 0
 for (k in (1:nrow(connectionDetailsMetaData))) {
   
   connectionDetailMetaData <-
-    connectionDetailsMetaData %>% dplyr::slice(k)
+    connectionDetailsMetaData |> dplyr::slice(k)
   
   connectionDetails <-
     DatabaseConnector::createConnectionDetails(
@@ -72,9 +72,9 @@ for (k in (1:nrow(connectionDetailsMetaData))) {
       name = DatabaseConnector::getTableNames(
         connection = DatabaseConnector::connect(connectionDetails = connectionDetails),
         databaseSchema = connectionDetailMetaData$cohortDatabaseSchema
-      ) %>%
+      ) |>
         toupper()
-    ) %>%
+    ) |>
     dplyr::filter(name == toupper(cohort))
   
   if (nrow(tablesInTargetSchema) == 0) {
@@ -120,7 +120,7 @@ for (k in (1:nrow(connectionDetailsMetaData))) {
         washoutPeriod = washoutPeriod,
         cohortId = cohortId,
         asTsibble = FALSE
-      ) %>%
+      ) |>
       dplyr::mutate(
         cohortName = cohortName,
         sourceKey = connectionDetailMetaData$sourceKey,

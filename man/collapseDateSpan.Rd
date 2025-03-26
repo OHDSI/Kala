@@ -28,17 +28,19 @@ A tibble with two date columns startDate, endDate. if a group variable
                      is provided, it will be part of returned object.
 }
 \description{
-This function takes an input data frame object with two date columns 
-corresponding to startDate and endDate, where endDate >= startDate. 
+This function takes an input data frame object with two date columns
+corresponding to startDate and endDate, where endDate >= startDate.
 It outputs a dataframe with non overlapping startDate and endDate - both dates
 inclusive. Optionally, the input and output data frame may be grouped by a group
 variable.
 }
 \examples{
 \dontrun{
-#If your data is in database, provide connection.
-connection <- collapseDateSpan(x = dataFrame,
-                               startDate = start,
-                               endDate = end)
+# If your data is in database, provide connection.
+connection <- collapseDateSpan(
+  x = dataFrame,
+  startDate = start,
+  endDate = end
+)
 }
 }

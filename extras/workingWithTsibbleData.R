@@ -1,33 +1,33 @@
 ## TSIBBLE############
 ######################
 # filter by key
-data <- tsibbleData %>% 
+data <- tsibbleData |> 
   dplyr::filter(rateType == 'incidence', firstOccurrenceOnly == TRUE, washoutPeriod == 365)
 
 # filter by index 
-data <- tsibbleData %>% 
-  dplyr::filter(rateType == 'incidence', firstOccurrenceOnly == TRUE, washoutPeriod == 365)  %>% 
+data <- tsibbleData |> 
+  dplyr::filter(rateType == 'incidence', firstOccurrenceOnly == TRUE, washoutPeriod == 365)  |> 
   tsibble::filter_index("2010-01-01" ~ "2019-12-31") 
 
 
 # change index period to calendar-week, month, quarter, year
-data2 <- tsibbleData %>% 
-  dplyr::filter(rateType == 'incidence', firstOccurrenceOnly == TRUE, washoutPeriod == 365)  %>% 
-  dplyr::select(-rateType, -firstOccurrenceOnly, -washoutPeriod) %>% 
-  tsibble::filter_index("2010-01-01" ~ "2019-12-31") %>% 
-  tsibble::group_by_key() %>% 
-  tsibble::index_by(calendarWeek = ~ tsibble::yearweek(.)) %>% 
+data2 <- tsibbleData |> 
+  dplyr::filter(rateType == 'incidence', firstOccurrenceOnly == TRUE, washoutPeriod == 365)  |> 
+  dplyr::select(-rateType, -firstOccurrenceOnly, -washoutPeriod) |> 
+  tsibble::filter_index("2010-01-01" ~ "2019-12-31") |> 
+  tsibble::group_by_key() |> 
+  tsibble::index_by(calendarWeek = ~ tsibble::yearweek(.)) |> 
   dplyr::summarise(numeratorCount = sum(numeratorCount),
                    denominatorCount = sum(denominatorCount)
   )
 
 # create new measure from existing measures
-data2 <- tsibbleData %>% 
-  dplyr::filter(rateType == 'incidence', firstOccurrenceOnly == TRUE, washoutPeriod == 365)  %>% 
-  dplyr::select(-rateType, -firstOccurrenceOnly, -washoutPeriod) %>% 
-  tsibble::filter_index("2010-01-01" ~ "2019-12-31") %>% 
-  tsibble::group_by_key() %>% 
-  tsibble::index_by(calendarWeek = ~ tsibble::yearweek(.)) %>% 
+data2 <- tsibbleData |> 
+  dplyr::filter(rateType == 'incidence', firstOccurrenceOnly == TRUE, washoutPeriod == 365)  |> 
+  dplyr::select(-rateType, -firstOccurrenceOnly, -washoutPeriod) |> 
+  tsibble::filter_index("2010-01-01" ~ "2019-12-31") |> 
+  tsibble::group_by_key() |> 
+  tsibble::index_by(calendarWeek = ~ tsibble::yearweek(.)) |> 
   dplyr::summarise(numeratorCount = sum(numeratorCount),
                    denominatorCount = sum(denominatorCount),
                    rate = sum(numeratorCount)/sum(denominatorCount)
@@ -48,12 +48,12 @@ tsibble::is_regular(data)
 ## FEASTS ############
 ######################
 
-data2 %>% 
-  dplyr::ungroup() %>% 
+data2 |> 
+  dplyr::ungroup() |> 
   dplyr::summarise(numeratorCount = sum(numeratorCount),
                    denominatorCount = sum(denominatorCount),
                    rate = sum(numeratorCount)/sum(denominatorCount)
-  ) %>% 
+  ) |> 
   feasts::gg_season(y = rate)
 
 
@@ -68,8 +68,8 @@ data2 %>%
 # change 
 
 
-group_by_key() %>%
-  index_by(Year_Month = ~ yearmonth(.)) %>%
+group_by_key() |>
+  index_by(Year_Month = ~ yearmonth(.)) |>
   summarise(
     Max_Count = max(Count),
     Min_Count = min(Count)

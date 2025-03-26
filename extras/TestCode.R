@@ -5,7 +5,7 @@ library(Kala)
 ParallelLogger::addDefaultErrorReportLogger()
 
 # RedShift --------------------------------------------------------
-connectionDetailsMetaData <- redShiftConnectionDetailsMetaData %>% 
+connectionDetailsMetaData <- redShiftConnectionDetailsMetaData |> 
   dplyr::filter(sourceKey == 'IBM_CCAE')
 
 connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = connectionDetailsMetaData$dbms,

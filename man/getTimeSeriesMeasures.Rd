@@ -51,7 +51,7 @@ table.}
 \item{asTsibble}{Should the returned data frame be in tsibble format?}
 }
 \value{
-Returns a tsibble (data frame) with keys (gender, ageGroup, washoutPeriod), 
+Returns a tsibble (data frame) with keys (gender, ageGroup, washoutPeriod),
                              index = periodBegin. The keys are parameters used in function call.
 }
 \description{

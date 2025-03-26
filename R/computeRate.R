@@ -129,7 +129,7 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
     sql = sql,
     oracleTempSchema = oracleTempSchema,
     snakeCaseToCamelCase = TRUE
-  ) %>%
+  ) |>
     dplyr::tibble()
 
   sql <- "TRUNCATE TABLE #time_series; DROP TABLE #time_series;"
@@ -141,7 +141,7 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
     oracleTempSchema = oracleTempSchema
   )
 
-  timeSeries <- timeSeries %>%
+  timeSeries <- timeSeries |>
     dplyr::mutate(
       ageGroup = paste(formatC(ageGroup * 10, width = 2, flag = "0"),
         formatC((ageGroup * 10) + 9, width = 2, flag = "0"),
@@ -150,16 +150,16 @@ getTimeSeriesMeasures <- function(connectionDetails = NULL,
       gender = stringr::str_to_sentence(gender)
     )
 
-  result <- timeSeries %>%
+  result <- timeSeries |>
     dplyr::mutate(washoutPeriod = 365)
 
   if (isTRUE(asTsibble)) {
-    result <- result %>%
+    result <- result |>
       tsibble::as_tsibble(
         key = c(gender, ageGroup, washoutPeriod),
         validate = TRUE,
         index = calendarDate
-      ) %>%
+      ) |>
       tsibble::fill_gaps(numeratorCount = 0)
   }
   delta <- Sys.time() - startClockTime

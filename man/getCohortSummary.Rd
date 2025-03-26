@@ -38,7 +38,7 @@ privileges for storing temporary tables.}
 table.}
 }
 \value{
-Returns a data frame of cohort count, person year count, 
+Returns a data frame of cohort count, person year count,
                              cohort_start (max and min dates), cohor_end (max and min dates)
 }
 \description{
@@ -46,8 +46,10 @@ Returns TRUE when a cohort has records
 }
 \examples{
 \dontrun{
-getCohortSummary(connection = connection,
-                 cohortDatabaseSchema = cohortDatabaseSchema,
-                 cohortId = 111)
+getCohortSummary(
+  connection = connection,
+  cohortDatabaseSchema = cohortDatabaseSchema,
+  cohortId = 111
+)
 }
 }

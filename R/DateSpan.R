@@ -48,58 +48,58 @@ collapseDateSpan <- function(x,
                              group = NULL) {
   errorMessage <- checkmate::makeAssertCollection()
   checkmate::assertDataFrame(x, any.missing = FALSE, min.cols = 2, min.rows = 1, add = errorMessage)
-  x %>%
-    dplyr::select(!!rlang::sym(startDate)) %>%
-    dplyr::pull() %>%
+  x |>
+    dplyr::select(!!rlang::sym(startDate)) |>
+    dplyr::pull() |>
     checkmate::assertDate(add = errorMessage)
-  x %>%
-    dplyr::select(!!rlang::sym(endDate)) %>%
-    dplyr::pull() %>%
+  x |>
+    dplyr::select(!!rlang::sym(endDate)) |>
+    dplyr::pull() |>
     checkmate::assertDate(add = errorMessage)
   checkmate::assertInt(x = gap, lower = 0, add = errorMessage)
   checkmate::reportAssertions(errorMessage)
 
   if (is.null(group)) {
-    result <- x %>%
+    result <- x |>
       dplyr::select(
         !!rlang::sym(startDate),
         !!rlang::sym(endDate)
-      ) %>%
+      ) |>
       dplyr::filter(!!rlang::sym(endDate) >=
-        !!rlang::sym(startDate)) %>%
-      dplyr::arrange(!!rlang::sym(startDate)) %>%
+        !!rlang::sym(startDate)) |>
+      dplyr::arrange(!!rlang::sym(startDate)) |>
       dplyr::mutate(idTemp = c(0, cumsum(
         as.numeric(dplyr::lead(!!rlang::sym(startDate))) >
           cummax(as.numeric(!!rlang::sym(endDate) + gap))
-      )[-dplyr::n()])) %>%
-      dplyr::group_by(idTemp) %>%
+      )[-dplyr::n()])) |>
+      dplyr::group_by(idTemp) |>
       dplyr::summarise(
         startDate = min(!!rlang::sym(startDate)),
         endDate = max(!!rlang::sym(endDate))
-      ) %>%
-      dplyr::select(-idTemp) %>%
+      ) |>
+      dplyr::select(-idTemp) |>
       dplyr::ungroup()
   } else {
-    result <- x %>%
+    result <- x |>
       dplyr::select(
         !!rlang::sym(group),
         !!rlang::sym(startDate),
         !!rlang::sym(endDate)
-      ) %>%
-      dplyr::filter(!!rlang::sym(endDate) >= !!rlang::sym(startDate)) %>%
-      dplyr::group_by(!!rlang::sym(group)) %>%
-      dplyr::arrange(!!rlang::sym(startDate), .by_group = TRUE) %>%
+      ) |>
+      dplyr::filter(!!rlang::sym(endDate) >= !!rlang::sym(startDate)) |>
+      dplyr::group_by(!!rlang::sym(group)) |>
+      dplyr::arrange(!!rlang::sym(startDate), .by_group = TRUE) |>
       dplyr::mutate(idTemp = c(0, cumsum(
         as.numeric(dplyr::lead(!!rlang::sym(startDate) + gap)) >
           cummax(as.numeric(!!rlang::sym(endDate)))
-      )[-dplyr::n()])) %>%
-      dplyr::ungroup() %>%
-      dplyr::group_by(!!rlang::sym(group), idTemp) %>%
+      )[-dplyr::n()])) |>
+      dplyr::ungroup() |>
+      dplyr::group_by(!!rlang::sym(group), idTemp) |>
       dplyr::summarise(
         startDate = min(!!rlang::sym(startDate)),
         endDate = max(!!rlang::sym(endDate))
-      ) %>%
-      dplyr::select(-idTemp) %>%
+      ) |>
+      dplyr::select(-idTemp) |>
       dplyr::ungroup()
   }
   return(result)
@@ -135,29 +135,29 @@ convertDateSpanToDateVector <- function(x,
     any.missing = FALSE, min.rows = 1, min.cols = 2,
     add = errorMessage
   )
-  x %>%
-    dplyr::select(!!rlang::sym(startDate)) %>%
-    dplyr::pull() %>%
+  x |>
+    dplyr::select(!!rlang::sym(startDate)) |>
+    dplyr::pull() |>
     checkmate::assertDate(add = errorMessage)
-  x %>%
-    dplyr::select(!!rlang::sym(endDate)) %>%
-    dplyr::pull() %>%
+  x |>
+    dplyr::select(!!rlang::sym(endDate)) |>
+    dplyr::pull() |>
     checkmate::assertDate(add = errorMessage)
   checkmate::reportAssertions(errorMessage)
 
-  result <- x %>%
-    dplyr::distinct() %>%
+  result <- x |>
+    dplyr::distinct() |>
     dplyr::mutate(dates = purrr::map2(
       .x = !!rlang::sym(startDate),
       .y = !!rlang::sym(endDate),
       .f = seq.Date,
       by = "day"
-    )) %>%
-    dplyr::select(dates) %>%
-    tidyr::unnest(cols = c(dates)) %>%
-    dplyr::distinct() %>%
-    dplyr::arrange() %>%
-    dplyr::select(dates) %>%
+    )) |>
+    dplyr::select(dates) |>
+    tidyr::unnest(cols = c(dates)) |>
+    dplyr::distinct() |>
+    dplyr::arrange() |>
+    dplyr::select(dates) |>
     dplyr::pull()
   return(result)
 }
@@ -205,21 +205,21 @@ convertDateVectorToDateSpan <- function(x,
   }
   checkmate::reportAssertions(errorMessage)
 
-  result <- tidyr::tibble(date = x) %>%
-    dplyr::distinct() %>%
-    dplyr::mutate(lagDifference = c(1, diff(date))) %>%
-    dplyr::mutate(interrupted = cumsum(lagDifference != 1)) %>%
-    dplyr::group_by(interrupted) %>%
+  result <- tidyr::tibble(date = x) |>
+    dplyr::distinct() |>
+    dplyr::mutate(lagDifference = c(1, diff(date))) |>
+    dplyr::mutate(interrupted = cumsum(lagDifference != 1)) |>
+    dplyr::group_by(interrupted) |>
     dplyr::summarise(
       startDate = min(date),
       endDate = max(date)
-    ) %>%
-    dplyr::ungroup() %>%
+    ) |>
+    dplyr::ungroup() |>
     dplyr::select(-interrupted)
 
   if (!is.null(unit)) {
-    calendarSpan <- tidyr::tibble(date = x) %>%
-      dplyr::distinct() %>%
+    calendarSpan <- tidyr::tibble(date = x) |>
+      dplyr::distinct() |>
       dplyr::mutate(
         floorDate = lubridate::floor_date(
           x = date,
@@ -231,13 +231,13 @@ convertDateVectorToDateSpan <- function(x,
           unit = unit,
           week_start = week_start
         ) - 1
-      ) %>%
-      dplyr::select(floorDate, ceilingDate) %>%
+      ) |>
+      dplyr::select(floorDate, ceilingDate) |>
       dplyr::distinct()
 
-    result <- tidyr::crossing(result, calendarSpan) %>%
+    result <- tidyr::crossing(result, calendarSpan) |>
       dplyr::filter(floorDate <= endDate &
-        ceilingDate >= startDate) %>%
+        ceilingDate >= startDate) |>
       dplyr::mutate(
         start = dplyr::case_when(
           floorDate < startDate ~ startDate,
@@ -247,8 +247,8 @@ convertDateVectorToDateSpan <- function(x,
           ceilingDate > endDate ~ endDate,
           TRUE ~ ceilingDate
         )
-      ) %>%
-      dplyr::select(start, end) %>%
+      ) |>
+      dplyr::select(start, end) |>
       dplyr::rename(startDate = start, endDate = end)
   }
   return(result)

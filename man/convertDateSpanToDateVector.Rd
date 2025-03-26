@@ -17,8 +17,8 @@ convertDateSpanToDateVector(x, startDate = "startDate", endDate = "endDate")
 A vector of dates.
 }
 \description{
-This function takes an input a data frame object with atleast two date columns 
-corresponding to startDate and endDate, where endDate >= startDate. 
+This function takes an input a data frame object with atleast two date columns
+corresponding to startDate and endDate, where endDate >= startDate.
 It outputs a vector of unique dates.
 }
 \examples{
