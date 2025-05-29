@@ -17,16 +17,17 @@ Depends:
 	DatabaseConnector (>= 5.0.0),
 	R (>= 4.1.0)
 Imports:
-  checkmate,
-  dplyr,
-	FeatureExtraction,
-  lifecycle,
-  ParallelLogger,
-  readr,
-  rlang,
-  stringr,
-	SqlRender,
-	tidyr
+    checkmate,
+    dplyr,
+    FeatureExtraction,
+    lifecycle,
+    ParallelLogger,
+    readr,
+    rlang,
+    stringr,
+    SqlRender,
+    tidyr,
+    ggplot2
 Suggests:
   Eunomia,
   httr,
