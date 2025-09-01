@@ -105,17 +105,32 @@ attributeDefinitionTable <- paste0("attr_def_", tableSuffix)
 
 if (dbms == "sqlite") {
   if (!is.null(checkRemoteFileAvailable("https://raw.githubusercontent.com/OHDSI/EunomiaDatasets/main/datasets/GiBleed/GiBleed_5.3.zip"))) {
+    # Eunomia database setup is slow, so we cache it in the user's cache directory.
+    cacheDir <- tools::R_user_dir("Kala", which = "cache")
+    sqliteFilePath <- file.path(cacheDir, "testEunomia.sqlite")
+    dir.create(cacheDir, showWarnings = FALSE, recursive = TRUE)
+
+    if (file.exists(sqliteFilePath)) {
+      message("Using cached Eunomia test database")
+      file.copy(sqliteFilePath, "testEunomia.sqlite", overwrite = TRUE)
+    } else {
+      message("Creating new Eunomia test database")
+      eunomiaConnectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = "testEunomia.sqlite")
+      Eunomia::createCohorts(
+        connectionDetails = eunomiaConnectionDetails,
+        cdmDatabaseSchema = "main",
+        cohortDatabaseSchema = "main",
+        cohortTable = "cohort"
+      )
+      file.copy("testEunomia.sqlite", sqliteFilePath)
+    }
+
     eunomiaConnectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = "testEunomia.sqlite")
     eunomiaCdmDatabaseSchema <- "main"
     eunomiaOhdsiDatabaseSchema <- "main"
     eunomiaConnection <- createUnitTestData(eunomiaConnectionDetails, eunomiaCdmDatabaseSchema, eunomiaOhdsiDatabaseSchema, cohortTable, cohortAttributeTable, attributeDefinitionTable)
-    Eunomia::createCohorts(
-      connectionDetails = eunomiaConnectionDetails,
-      cdmDatabaseSchema = eunomiaCdmDatabaseSchema,
-      cohortDatabaseSchema = eunomiaOhdsiDatabaseSchema,
-      cohortTable = "cohort"
-    )
   }
+
   withr::defer(
     {
       if (exists("eunomiaConnection")) {

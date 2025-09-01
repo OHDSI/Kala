@@ -59,7 +59,6 @@
 #' print(settings)
 #' }
 #'
-#' @export
 getFeatureExtractionDefaultTemporalCohortCovariateSettings <-
   function(timeWindows = getFeatureExtractionDefaultTimeWindows(),
            analysisId = 150,

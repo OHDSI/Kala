@@ -46,7 +46,6 @@
 #' print(timeWindows)
 #' }
 #'
-#' @export
 getCovariateSettingsTimeWindows <- function(covariateSettings) {
   timeWindows <-
     dplyr::tibble(
