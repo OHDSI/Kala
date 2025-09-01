@@ -35,6 +35,7 @@
 #' @return A data frame containing the filtered time windows with columns: startDay, endDay, periodName,
 #'         and windowType.
 
+#' @export
 getFeatureExtractionDefaultTimeWindows <-
   function(cumulative = NULL,
            periodTypes = NULL,

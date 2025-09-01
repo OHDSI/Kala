@@ -11,7 +11,7 @@ test_that("Default feature extraction run", {
     cohortName = c("Celecoxib")
   )
 
-  defaultCovariates <- Kala:::getFeatureExtractionDefaultTemporalCovariateSettings()
+  defaultCovariates <- getFeatureExtractionDefaultTemporalCovariateSettings()
 
   executeFeatureExtraction(
     connectionDetails = eunomiaConnectionDetails,
