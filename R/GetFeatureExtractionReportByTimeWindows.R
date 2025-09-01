@@ -316,30 +316,33 @@ getFeatureExtractionReportByTimeWindows <- function(covariateData,
     }
 
     # Format the report if needed
-    if (all(nrow(reportTimeVarying) > 0, length(colnames(reportTimeVarying) > 0), format)) {
-      reportTimeVarying <-
-        dplyr::bind_rows(
-          reportTimeVarying |>
-            dplyr::filter(.data$continuous == 0) |>
-            dplyr::mutate(
-              report = formatCountPercent(
-                count = .data$sumValue,
-                percent = .data$averageValue
+    if (nrow(reportTimeVarying) > 0) {
+      if (format) {
+        reportTimeVarying <-
+          dplyr::bind_rows(
+            reportTimeVarying |>
+              dplyr::filter(.data$continuous == 0) |>
+              dplyr::mutate(
+                report = formatCountPercent(
+                  count = .data$sumValue,
+                  percent = .data$averageValue
+                )
+              ),
+            reportTimeVarying |>
+              dplyr::filter(.data$continuous == 1) |>
+              dplyr::mutate(
+                report = formatDecimalWithComma(
+                  number = .data$averageValue,
+                  decimalPlaces = 1,
+                  round = 1
+                )
               )
-            ),
-          reportTimeVarying |>
-            dplyr::filter(.data$continuous == 1) |>
-            dplyr::mutate(
-              report = formatDecimalWithComma(
-                number = .data$averageValue,
-                decimalPlaces = 1,
-                round = 1
-              )
-            )
-        ) |>
-        dplyr::select(-.data$continuous)
-    } else {
-      reportTimeVarying <- dplyr::tibble()
+          ) |>
+          dplyr::select(-.data$continuous)
+      } else {
+        reportTimeVarying <- reportTimeVarying |>
+          dplyr::select(-.data$continuous)
+      }
     }
   }
 
@@ -457,34 +460,33 @@ getFeatureExtractionReportByTimeWindows <- function(covariateData,
     }
 
     # Format the non-time-varying report if needed
-    if (all(
-      nrow(reportNonTimeVarying) > 0,
-      length(colnames(reportNonTimeVarying) > 0),
-      format
-    )) {
-      reportNonTimeVarying <-
-        dplyr::bind_rows(
-          reportNonTimeVarying |>
-            dplyr::filter(.data$continuous == 0) |>
-            dplyr::mutate(
-              report = formatCountPercent(
-                count = .data$sumValue,
-                percent = .data$averageValue
+    if (nrow(reportNonTimeVarying) > 0) {
+      if (format) {
+        reportNonTimeVarying <-
+          dplyr::bind_rows(
+            reportNonTimeVarying |>
+              dplyr::filter(.data$continuous == 0) |>
+              dplyr::mutate(
+                report = formatCountPercent(
+                  count = .data$sumValue,
+                  percent = .data$averageValue
+                )
+              ),
+            reportNonTimeVarying |>
+              dplyr::filter(.data$continuous == 1) |>
+              dplyr::mutate(
+                report = formatDecimalWithComma(
+                  number = .data$averageValue,
+                  decimalPlaces = 1,
+                  round = 1
+                )
               )
-            ),
-          reportNonTimeVarying |>
-            dplyr::filter(.data$continuous == 1) |>
-            dplyr::mutate(
-              report = formatDecimalWithComma(
-                number = .data$averageValue,
-                decimalPlaces = 1,
-                round = 1
-              )
-            )
-        ) |>
-        dplyr::select(-.data$continuous)
-    } else {
-      reportNonTimeVarying <- dplyr::tibble()
+          ) |>
+          dplyr::select(-.data$continuous)
+      } else {
+        reportNonTimeVarying <- reportNonTimeVarying |>
+          dplyr::select(-.data$continuous)
+      }
     }
   }
 
@@ -577,7 +579,7 @@ getFeatureExtractionReportByTimeWindows <- function(covariateData,
   }
 
   # Pivot the report if requested
-  if (pivot) {
+  if (pivot && "report" %in% names(report)) {
     report <- report |>
       tidyr::pivot_wider(
         id_cols = idCols,
