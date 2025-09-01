@@ -42,7 +42,6 @@
 #' comma-separated string.
 #'
 #'
-#' @export
 getTable1SpecificationsRow <- function(analysisId,
                                        conceptIds = NULL,
                                        covariateIds = NULL,
@@ -119,7 +118,6 @@ getTable1SpecificationsRow <- function(analysisId,
 #' print(table1Specs)
 #' }
 #'
-#' @export
 getTable1SpecificationsFromCovariateData <-
   function(covariateData = NULL,
            covariateRef = NULL,
