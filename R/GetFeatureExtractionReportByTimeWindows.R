@@ -93,7 +93,6 @@
 #' View(report$formatted)
 #' }
 #'
-#' @export
 getFeatureExtractionReportByTimeWindows <- function(covariateData,
                                                     startDays = NULL,
                                                     endDays = NULL,
