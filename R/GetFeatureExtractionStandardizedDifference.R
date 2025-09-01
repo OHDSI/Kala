@@ -53,6 +53,7 @@
 #' print(stdDiff)
 #' }
 #'
+#' @export
 getFeatureExtractionStandardizedDifference <-
   function(covariateData1Path = NULL,
            covariateData2Path = NULL,

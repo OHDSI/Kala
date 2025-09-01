@@ -52,7 +52,7 @@ tib2 <- tibble(y = c("a", "b", "c"), x = c(1, 2, 3))
 compareTibbles(tib1, tib2)
 
 # Modify tib2 by adding an extra row
-tib2 <- tib2 |> dplyr::add_row(x = 4, y = "d")
+tib2 <- tib2 \%>\% dplyr::add_row(x = 4, y = "d")
 
 # Compare again (differences in rows will be reported)
 compareTibbles(tib1, tib2)

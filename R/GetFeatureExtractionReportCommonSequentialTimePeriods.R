@@ -36,6 +36,7 @@
 #' print(timePeriods)
 #' }
 #'
+#' @export
 getFeatureExtractionReportCommonSequentialTimePeriods <-
   function() {
     # Define prior monthly periods with their time IDs, start days, and end days

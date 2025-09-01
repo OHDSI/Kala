@@ -50,6 +50,7 @@
 #' print(report$formatted)
 #' }
 #'
+#' @export
 getFeatureExtractionReportNonTimeVarying <-
   function(covariateDataPath,
            cohortId,
