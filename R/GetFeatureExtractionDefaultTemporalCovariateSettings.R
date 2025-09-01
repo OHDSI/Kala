@@ -56,7 +56,6 @@
 #' print(temporalSettings)
 #' }
 #'
-#' @export
 getFeatureExtractionDefaultTemporalCovariateSettings <-
   function(timeWindows = getFeatureExtractionDefaultTimeWindows(),
            useConditionOccurrence = TRUE,
