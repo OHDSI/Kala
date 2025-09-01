@@ -40,7 +40,6 @@
 #' formatDecimalWithComma(1234567.8912, decimalPlaces = 2, round = FALSE)
 #' # Might return "1,234,567.89"
 #'
-#' @export
 formatDecimalWithComma <- function(number,
                                    decimalPlaces = 1,
                                    round = TRUE) {
